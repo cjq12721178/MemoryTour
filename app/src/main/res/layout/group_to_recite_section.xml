@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/ic_sections_background_to_recite"
+    android:padding="@dimen/padding_to_recite_section">
+    <include layout="@layout/list_item_to_recite_section"/>
+    <ListView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/lv_sections"
+        android:divider="@null"/>
+</LinearLayout>

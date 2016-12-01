@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.cjq.tool.memorytour.ui.activity.NewMissionEditActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+        <include layout="@layout/group_to_recite_section"
+            android:id="@+id/il_books_to_recite"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent" />
+        <include layout="@layout/group_to_recite_section"
+            android:id="@+id/il_chapters_to_recite"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent" />
+    </LinearLayout>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2"
+        android:background="@drawable/ic_sections_background_to_recite"
+        android:padding="80dp">
+        <include layout="@layout/list_item_to_recite_passage"
+            android:id="@+id/il_header_to_recite_passages"
+            android:layout_alignParentTop="true"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/btn_add_new_passages_to_recite"
+            android:layout_alignParentBottom="true"
+            android:text="@string/btn_add_new_passages_to_recite"
+            android:background="@drawable/ic_bg_button_single"/>
+        <ListView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/lv_passages_to_recite"
+            android:layout_below="@id/il_header_to_recite_passages"
+            android:layout_above="@id/btn_add_new_passages_to_recite"
+            android:divider="@null"/>
+    </RelativeLayout>
+</LinearLayout>

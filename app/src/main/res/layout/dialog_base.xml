@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="@dimen/width_dialog_base"
+    android:layout_height="wrap_content"
+    android:background="@drawable/ic_bg_dialog_setting"
+    android:paddingLeft="@dimen/padding_dialog_base_horizontal"
+    android:paddingRight="@dimen/padding_dialog_base_horizontal"
+    android:paddingTop="@dimen/padding_dialog_base_vertical"
+    android:paddingBottom="@dimen/padding_dialog_base_vertical">
+
+    <ViewStub
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/vs_title_dialog_edit"
+        android:layout="@layout/tv_title"/>
+</LinearLayout>

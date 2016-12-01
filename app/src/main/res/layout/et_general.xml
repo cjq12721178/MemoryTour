@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<EditText xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/selector_edit_text_general"
+    android:padding="@dimen/padding_micro"
+    android:textColorHint="#AAAAAA"
+    android:textSize="@dimen/size_text_dialog"
+    android:inputType="textMultiLine"
+    android:textCursorDrawable="@null"
+    android:selectAllOnFocus="true">
+</EditText>

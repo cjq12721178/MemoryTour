@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.cjq.tool.memorytour.ui.layout.PassageView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageButton
+        android:layout_width="@dimen/size_image_middle"
+        android:layout_height="@dimen/size_image_middle"
+        android:scaleType="fitCenter"
+        android:id="@+id/ib_recite_test"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="@dimen/margin_vertical_mid"
+        android:layout_marginRight="@dimen/margin_horizontal_mid"
+        android:visibility="invisible"
+        android:src="@drawable/ic_recite_test"
+        android:background="@android:color/transparent"/>
+
+</com.cjq.tool.memorytour.ui.layout.PassageView>

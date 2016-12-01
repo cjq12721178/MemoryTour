@@ -1,0 +1,109 @@
+<resources>
+    <!-- 通用 -->
+    <string name="app_name">记忆之旅</string>
+    <string name="book">书</string>
+    <string name="chapter">章</string>
+    <string name="passage">节</string>
+    <string name="memory_pattern">记忆模式</string>
+    <!-- 相当于记忆时间间隔 -->
+    <string name="memory_cycle">记忆周期(天数)</string>
+    <string name="ok">确定</string>
+    <string name="cancel">取消</string>
+
+    <!-- 界面控件显示用语 -->
+    <!-- 功能切换面板 -->
+    <string name="tv_everyday_recite">回梦仙游</string>
+    <string name="tv_new_mission">开疆拓土</string>
+    <string name="tv_history_record">镜花水月</string>
+    <string name="tv_special_function">奇技淫巧</string>
+    <!-- 特殊功能界面 -->
+    <string name="tv_import_books_label">导入书目</string>
+    <string name="tv_import_chapters_label">导入篇目</string>
+    <string name="tv_import_passages_label">导入章节</string>
+    <string name="tv_import_books_path">/storage/emulated/0/memory tour/books.xml</string>
+    <string name="tv_import_chapters_path">/storage/emulated/0/memory tour/chapters.xml</string>
+    <string name="tv_import_passages_path">/storage/emulated/0/memory tour/passages.xml</string>
+    <string name="el_import_title">请选择导入文件</string>
+    <string name="btn_insert_section">保存至本地数据库</string>
+    <string name="btn_add_to_recite">修改待记忆章节库</string>
+    <!-- Passage视图界面 -->
+    <string name="rdo_main_body">正文</string>
+    <string name="rdo_comments">注释</string>
+    <string name="rdo_translation">译文</string>
+    <string name="rdo_appreciation">赏析</string>
+    <string name="rdo_author">作者</string>
+    <string name="rdo_experience">体会</string>
+    <string name="btn_experience">请记录自己的心得体会吧</string>
+    <!-- 新增未记忆任务界面 -->
+    <string name="btn_add_new_passages_to_recite">加入未记忆侯选章节库</string>
+    <string name="tv_section_state">状态</string>
+    <!-- 新记章节设置界面 -->
+    <string name="tv_label_name_custom">自定义章节名</string>
+    <string name="tv_title_memory_data_setting">记忆参数设置</string>
+    <!-- 体会设置界面 -->
+    <string name="swt_add_experience">添加体会</string>
+    <string name="swt_modify_experience">修改体会</string>
+    <string name="et_hint_add_experience">请在此记录自己的体会</string>
+    <!-- 记忆测试界面 -->
+    <string name="rdo_remembered">记住</string>
+    <string name="rdo_unremembered">遗忘</string>
+    <string name="btn_check_origin">查看原文</string>
+    <string name="btn_next_passage">下一章节</string>
+    <string name="tv_title_recite_test">记忆测试</string>
+    <string name="tv_recite_name_label">篇名</string>
+    <string name="tv_expect_recite_time_label">预期记忆时间</string>
+    <string name="tv_current_recite_mission_completed">本次为当前记忆模式下最后一次任务</string>
+    <!-- 历史记录界面 -->
+    <string name="tv_no_history_record">该章节暂无历史记录</string>
+    <string name="tv_title_history_record">历史记录</string>
+
+    <!-- 界面提示用语 -->
+    <!-- MainActivity -->
+    <string name="ppt_database_open_failed">本地数据库开启失败</string>
+    <string name="ppt_exit_app">再按一次离开记忆之旅</string>
+    <!-- BaseFragment -->
+    <string name="ppt_experience_update_failed">体会更新失败</string>
+    <!-- 新任务界面 -->
+    <string name="ppt_reach_last_passage_new_mission">暂时没有更多未记忆章节在库</string>
+    <string name="ppt_passage_content_null">当前章节内容不存在</string>
+    <string name="ppt_content_panel_choose_error">未选中任何内容，看见我你可以改代码了，童鞋！</string>
+    <string name="ppt_no_new_mission">当前记忆候选库为空，可在“奇技淫巧”中修改待记忆章节库</string>
+    <!-- 特殊功能界面 -->
+    <string name="ppt_section_file_path_empty">导入文件路径不得为空</string>
+    <string name="ppt_section_file_read_error">导入文件读取失败</string>
+    <string name="ppt_file_manager_not_installed">请安装文件管理器</string>
+    <string name="ppt_enable_import_section">请点击允许导入书/篇/章</string>
+    <string name="ppt_saving_section">正在保存...</string>
+    <!-- Passage视图界面 -->
+    <string name="ppt_content_null_main_body">当前章节无正文</string>
+    <string name="ppt_content_null_comments">当前章节无注释</string>
+    <string name="ppt_content_null_translation">当前章节无译文</string>
+    <string name="ppt_content_null_appreciation">当前章节无赏析</string>
+    <string name="ppt_content_null_author">当前章节无作者简介</string>
+    <string name="ppt_content_null_experience">当前章节无体会</string>
+    <!-- 新增未记忆任务界面 -->
+    <string name="ppt_section_map_instructing">正在建立记忆库视图...</string>
+    <string name="ppt_section_map_build_error">记忆库视图创建失败</string>
+    <string name="ppt_section_null">目前没有收录任何书籍、篇目和章节</string>
+    <string name="ppt_add_passages_to_recite">所选章节正在加入记忆候选库...</string>
+    <string name="ppt_recitable_passages_update_success">记忆侯选库更新成功</string>
+    <string name="ppt_recitable_passages_update_failed">记忆侯选库更新失败</string>
+    <!-- 新记章节设置界面 -->
+    <string name="ppt_no_memory_pattern_selected">请选择一个记忆模式</string>
+    <string name="ppt_memory_data_not_modified">记忆数据尚未修改完毕，请稍后...</string>
+    <string name="ppt_memory_data_modify_failed">记忆数据修改失败</string>
+    <!-- 日常记忆界面 -->
+    <string name="ppt_custom_name_changing">自定义名称修改中...</string>
+    <string name="ppt_custom_name_modify_failed">自定义名称修改失败</string>
+    <string name="ppt_daily_missions_load_failed">日常任务导入失败</string>
+    <string name="ppt_part_mission_load_failed">部分任务载入失败</string>
+    <string name="ppt_no_daily_missions">今日没有记忆任务</string>
+    <string name="ppt_daily_missions_completed">今日记忆任务全部完成</string>
+    <!-- 记忆测试界面 -->
+    <string name="ppt_title_modify_custom_name">修改自定义名称</string>
+
+    <!-- 其他 -->
+    <string name="ppt_reach_last_passage_default">已至尾节</string>
+    <string name="ppt_reach_first_passage_default">已至首节</string>
+    <string name="ppt_current_passage_empty">当前章节不存在</string>
+</resources>

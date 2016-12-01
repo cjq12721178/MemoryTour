@@ -1,0 +1,49 @@
+apply plugin: 'com.android.application'
+
+def buildTime() {
+    def date = new Date()
+    def formattedDate = date.format('yyyyMMdd')
+    return formattedDate
+}
+
+android {
+    signingConfigs {
+    }
+    compileSdkVersion 23
+    buildToolsVersion '23.0.3'
+    defaultConfig {
+        applicationId 'com.cjq.tool'
+        minSdkVersion 17
+        targetSdkVersion 23
+        versionCode 3
+        versionName "0.1.2"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+    //打包后应用名称
+    applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            def outputFile = output.outputFile
+            def fileName
+            if (outputFile != null && outputFile.name.endsWith('.apk')) {
+                if (variant.buildType.name.equals('release')) {
+                    fileName = "com.cjq.tool.memorytour_${defaultConfig.versionName}_${buildTime()}.apk"
+                } else if (variant.buildType.name.equals('debug')) {
+                    fileName = "debug_${defaultConfig.versionName}}.apk"
+                }
+                output.outputFile = new File(outputFile.parent, fileName)
+            }
+        }
+    }
+    productFlavors {
+    }
+}
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    testCompile 'junit:junit:4.12'
+    compile 'com.android.support:appcompat-v7:23.4.0'
+}
