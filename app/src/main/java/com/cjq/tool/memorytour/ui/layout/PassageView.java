@@ -2,6 +2,7 @@ package com.cjq.tool.memorytour.ui.layout;
 
 import android.content.Context;
 import android.support.annotation.IdRes;
+import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
 import android.support.v4.app.FragmentManager;
 import android.text.TextUtils;
@@ -40,7 +41,6 @@ public class PassageView extends RelativeLayout {
     private ScrollView svPassageCarrier;
     private ImageButton ibSetExperience;
     private ImageButton ibHistoryRecord;
-    private StringBuilder contentBuilder = new StringBuilder(256);
     private Adapter adapter;
     private OnPassageShowListener onPassageShowListener;
     private boolean enableSlideSwitch = false;
@@ -49,6 +49,9 @@ public class PassageView extends RelativeLayout {
     private ExperienceEditDialog experienceEditDialog;
     private OnExperienceChangedListener onExperienceChangedListener;
     private HistoryRecordDialog historyRecordDialog;
+    private int prevPassageId;
+    private int prevCheckedPanelId;
+    private ContentBuilder[] contentBuilders;
 
     private View.OnClickListener onFunctionPanelClickListener = new OnClickListener() {
         @Override
@@ -174,47 +177,30 @@ public class PassageView extends RelativeLayout {
             tvPassageContent.setText(getContext().getString(R.string.ppt_passage_content_null));
             tvPassageContent.setGravity(Gravity.CENTER);
         } else {
-            switch (checkedPanelId) {
-                case R.id.rdo_main_body:setContent(passage.getAuthorName(), passage.getAuthorDynasty(), passage.getContent(), R.string.ppt_content_null_main_body);break;
-                case R.id.rdo_comments:setContent(null, null, passage.getComments(), R.string.ppt_content_null_comments);break;
-                case R.id.rdo_translation:setContent(null, null, passage.getTranslation(), R.string.ppt_content_null_translation);break;
-                case R.id.rdo_appreciation:setContent(null, null, passage.getAppreciation(), R.string.ppt_content_null_appreciation);break;
-                case R.id.rdo_author:setContent(null, null, passage.getAuthorIntroduction(), R.string.ppt_content_null_author);break;
-                case R.id.rdo_experience:setContent(null, null, passage.getExperience(), R.string.ppt_content_null_experience);break;
-                default:setContent(null, null, null, R.string.ppt_content_panel_choose_error);break;
+            //记录滚动位置
+            int currPassageId = passage.getId();
+            if (prevPassageId != currPassageId) {
+                clearContentBuilderRecord();
+            } else {
+                getContentBuilder(prevCheckedPanelId).setScrollPos(getCurrentBrowsePosition());
             }
+            prevCheckedPanelId = checkedPanelId;
+            //设置实际内容
+            ContentBuilder contentBuilder = getContentBuilder(checkedPanelId);
+            String realContent = contentBuilder.build(passage);
+            tvPassageContent.setText(realContent);
+            tvPassageContent.setGravity(realContent.charAt(0) == '　' ? Gravity.START : Gravity.CENTER_HORIZONTAL);
+            //设置滚动位置
+            if (prevPassageId == currPassageId) {
+                setBrowsePosition(contentBuilder.getScrollPos());
+            }
+            prevPassageId = currPassageId;
         }
-    }
-
-    private void setContent(String authorName, String authorDynasty, String content, @StringRes int contentNullWarnInfo) {
-        contentBuilder.setLength(0);
-        if (!TextUtils.isEmpty(authorDynasty)) {
-            contentBuilder.append('[')
-                    .append(authorDynasty)
-                    .append(']')
-                    .append(' ');
-        }
-        if (!TextUtils.isEmpty(authorName)) {
-            contentBuilder.append(authorName)
-                    .append('\n')
-                    .append('\n');
-        }
-        if (TextUtils.isEmpty(content)) {
-            content = getContext().getString(contentNullWarnInfo);
-        }
-        String realContent;
-        if (contentBuilder.length() > 0) {
-            contentBuilder.append(content);
-            realContent = contentBuilder.toString();
-        } else {
-            realContent = content;
-        }
-        tvPassageContent.setText(realContent);
-        tvPassageContent.setGravity(realContent.charAt(0) == '　' ? Gravity.START : Gravity.CENTER_HORIZONTAL);
     }
 
     public PassageView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        initContentBuilder(context);
         View view = LayoutInflater.from(context).inflate(R.layout.group_passage_view, this);
         rgContentPanel = (RadioGroup)view.findViewById(R.id.rdo_grp_content_panel);
         rgContentPanel.setOnCheckedChangeListener(onCheckedChangeListener);
@@ -237,6 +223,7 @@ public class PassageView extends RelativeLayout {
                 passage.getExperience() + '\n' + newExperience;
     }
 
+    @NonNull
     private String formatExperience(String experience) {
         StringBuilder builder = new StringBuilder(experience);
         Converter.guaranteeSBC(builder);
@@ -277,6 +264,14 @@ public class PassageView extends RelativeLayout {
         }
     }
 
+    private int getCurrentBrowsePosition() {
+        return svPassageCarrier.getScrollY();
+    }
+
+    private void setBrowsePosition(int position) {
+        svPassageCarrier.setScrollY(position);
+    }
+
     private void showPassage(Passage passage, @IdRes int content) {
         setTitle(passage);
         showContent(passage, content);
@@ -290,8 +285,10 @@ public class PassageView extends RelativeLayout {
         }
     }
 
+    //注意，该方法只能在当前章节的各个部分进行切换
     public void showContent(@IdRes int content) {
-        rgContentPanel.check(content);
+        //rgContentPanel.check(content);
+        showContent(adapter.currPassage(), content);
     }
 
     public void showCurr() {
@@ -300,7 +297,9 @@ public class PassageView extends RelativeLayout {
             Prompter.show(R.string.ppt_current_passage_empty);
             return;
         }
+        int pos = getCurrentBrowsePosition();
         showPassage(passage, R.id.rdo_main_body);
+        setBrowsePosition(pos);
     }
 
     public void showNext() {
@@ -355,6 +354,36 @@ public class PassageView extends RelativeLayout {
         tvPassageContent.setText("");
     }
 
+    private void initContentBuilder(Context context) {
+        contentBuilders = new ContentBuilder[7];
+        contentBuilders[0] = new MainBodyBuilder(context.getString(R.string.ppt_content_null_main_body));
+        contentBuilders[1] = new CommentsBuilder(context.getString(R.string.ppt_content_null_comments));
+        contentBuilders[2] = new TranslationBuilder(context.getString(R.string.ppt_content_null_translation));
+        contentBuilders[3] = new AppreciationBuilder(context.getString(R.string.ppt_content_null_appreciation));
+        contentBuilders[4] = new AuthorIntroductionBuilder(context.getString(R.string.ppt_content_null_appreciation));
+        contentBuilders[5] = new ExperienceBuilder(context.getString(R.string.ppt_content_null_experience));
+        contentBuilders[6] = new NullBuilder(context.getString(R.string.ppt_content_panel_choose_error));
+    }
+
+    private ContentBuilder getContentBuilder(@IdRes int checkedPanelId) {
+        switch (checkedPanelId) {
+            case R.id.rdo_main_body:return contentBuilders[0];
+            case R.id.rdo_comments:return contentBuilders[1];
+            case R.id.rdo_translation:return contentBuilders[2];
+            case R.id.rdo_appreciation:return contentBuilders[3];
+            case R.id.rdo_author:return contentBuilders[4];
+            case R.id.rdo_experience:return contentBuilders[5];
+            default:return contentBuilders[6];
+        }
+    }
+
+    private void clearContentBuilderRecord() {
+        for (ContentBuilder builder :
+                contentBuilders) {
+            builder.setScrollPos(0);
+        }
+    }
+
     public static abstract class Adapter {
 
         public abstract Passage currPassage();
@@ -384,4 +413,135 @@ public class PassageView extends RelativeLayout {
             return null;
         }
     };
+
+    private static abstract class ContentBuilder {
+
+        private static StringBuilder builder = new StringBuilder(256);
+        private int scrollPos;
+        private final String nullContentWarnInfo;
+
+        public ContentBuilder(String nullContentWarnInfo) {
+            this.nullContentWarnInfo = nullContentWarnInfo;
+        }
+
+        public int getScrollPos() {
+            return scrollPos;
+        }
+
+        public void setScrollPos(int position) {
+            scrollPos = position;
+        }
+
+        public abstract String build(Passage passage);
+
+        protected String build(String authorName, String authorDynasty, String content) {
+            builder.setLength(0);
+            if (!TextUtils.isEmpty(authorDynasty)) {
+                builder.append('[')
+                        .append(authorDynasty)
+                        .append(']')
+                        .append(' ');
+            }
+            if (!TextUtils.isEmpty(authorName)) {
+                builder.append(authorName)
+                        .append('\n')
+                        .append('\n');
+            }
+            if (TextUtils.isEmpty(content)) {
+                content = nullContentWarnInfo;
+            }
+            String realContent;
+            if (builder.length() > 0) {
+                builder.append(content);
+                realContent = builder.toString();
+            } else {
+                realContent = content;
+            }
+            return realContent;
+        }
+    }
+
+    private static class MainBodyBuilder extends ContentBuilder {
+
+        public MainBodyBuilder(String nullContentWarnInfo) {
+            super(nullContentWarnInfo);
+        }
+
+        @Override
+        public String build(Passage passage) {
+            return build(passage.getAuthorName(), passage.getAuthorDynasty(), passage.getContent());
+        }
+    }
+
+    private static class CommentsBuilder extends ContentBuilder {
+
+        public CommentsBuilder(String nullContentWarnInfo) {
+            super(nullContentWarnInfo);
+        }
+
+        @Override
+        public String build(Passage passage) {
+            return build(null, null, passage.getComments());
+        }
+    }
+
+    private static class TranslationBuilder extends ContentBuilder {
+
+        public TranslationBuilder(String nullContentWarnInfo) {
+            super(nullContentWarnInfo);
+        }
+
+        @Override
+        public String build(Passage passage) {
+            return build(null, null, passage.getTranslation());
+        }
+    }
+
+    private static class AppreciationBuilder extends ContentBuilder {
+
+        public AppreciationBuilder(String nullContentWarnInfo) {
+            super(nullContentWarnInfo);
+        }
+
+        @Override
+        public String build(Passage passage) {
+            return build(null, null, passage.getAppreciation());
+        }
+    }
+
+    private static class AuthorIntroductionBuilder extends ContentBuilder {
+
+        public AuthorIntroductionBuilder(String nullContentWarnInfo) {
+            super(nullContentWarnInfo);
+        }
+
+        @Override
+        public String build(Passage passage) {
+            return build(null, null, passage.getAuthorIntroduction());
+        }
+    }
+
+    private static class ExperienceBuilder extends ContentBuilder {
+
+        public ExperienceBuilder(String nullContentWarnInfo) {
+            super(nullContentWarnInfo);
+        }
+
+        @Override
+        public String build(Passage passage) {
+            return build(null, null, passage.getExperience());
+        }
+    }
+
+    private static class NullBuilder extends ContentBuilder {
+
+        public NullBuilder(String nullContentWarnInfo) {
+            super(nullContentWarnInfo);
+        }
+
+        @Override
+        public String build(Passage passage) {
+            return build(null, null, null);
+        }
+    }
 }
