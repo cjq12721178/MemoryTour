@@ -418,6 +418,7 @@ public class PassageView extends RelativeLayout {
 
         private static StringBuilder builder = new StringBuilder(256);
         private int scrollPos;
+        protected String value;
         private final String nullContentWarnInfo;
 
         public ContentBuilder(String nullContentWarnInfo) {
@@ -435,6 +436,8 @@ public class PassageView extends RelativeLayout {
         public abstract String build(Passage passage);
 
         protected String build(String authorName, String authorDynasty, String content) {
+            if (value != null)
+                return value;
             builder.setLength(0);
             if (!TextUtils.isEmpty(authorDynasty)) {
                 builder.append('[')
@@ -450,14 +453,14 @@ public class PassageView extends RelativeLayout {
             if (TextUtils.isEmpty(content)) {
                 content = nullContentWarnInfo;
             }
-            String realContent;
+            //String realContent;
             if (builder.length() > 0) {
                 builder.append(content);
-                realContent = builder.toString();
+                value = builder.toString();
             } else {
-                realContent = content;
+                value = content;
             }
-            return realContent;
+            return value;
         }
     }
 
@@ -529,6 +532,7 @@ public class PassageView extends RelativeLayout {
 
         @Override
         public String build(Passage passage) {
+            value = null;
             return build(null, null, passage.getExperience());
         }
     }
