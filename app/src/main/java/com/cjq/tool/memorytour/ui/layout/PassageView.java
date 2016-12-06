@@ -35,6 +35,8 @@ public class PassageView extends RelativeLayout {
         void onEnableFullScreen(boolean enable);
     }
 
+    private static final int SLIDE_SWITCH_THRESHOLD = 10;
+    private static final int CLICK_THRESHOLD = 5;
     private TextView tvPassageTitle;
     private TextView tvPassageContent;
     private RadioGroup rgContentPanel;
@@ -107,7 +109,7 @@ public class PassageView extends RelativeLayout {
                 case MotionEvent.ACTION_UP: {
                     x = event.getX() - x;
                     y = Math.abs(event.getY() - y);
-                    if (y < 5 && (x > -5 || x < 5)) {
+                    if (y < CLICK_THRESHOLD && (x > -SLIDE_SWITCH_THRESHOLD || x < SLIDE_SWITCH_THRESHOLD)) {
                         enableFullscreen(rgContentPanel.getVisibility() == VISIBLE);
                         return true;
                     }

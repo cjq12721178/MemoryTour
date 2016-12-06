@@ -60,7 +60,7 @@ public class HistoryRecordDialog extends BaseDialog {
                 builder.append(", ");
             }
             builder.append(String.format("%d.%d",
-                    calendar.get(Calendar.MONTH),
+                    calendar.get(Calendar.MONTH) + 1,
                     calendar.get(Calendar.DATE)));
         }
         return builder.toString();
