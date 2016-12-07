@@ -131,24 +131,19 @@ public class PassageView extends RelativeLayout {
     };
 
     private void enableFullscreen(boolean enable) {
-        //RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams)svPassageCarrier.getLayoutParams();
         if (enable) {
-            //params.removeRule(ABOVE);
             ibSetExperience.setVisibility(INVISIBLE);
             if (ibHistoryRecord != null) {
                 ibHistoryRecord.setVisibility(INVISIBLE);
             }
-            //rgContentPanel.setVisibility(INVISIBLE);
             rgContentPanel.setVisibility(GONE);
         } else {
-            //params.addRule(ABOVE, R.id.rdo_grp_content_panel);
             ibSetExperience.setVisibility(VISIBLE);
             if (ibHistoryRecord != null) {
                 ibHistoryRecord.setVisibility(VISIBLE);
             }
             rgContentPanel.setVisibility(VISIBLE);
         }
-        //svPassageCarrier.setLayoutParams(params);
         if (onEnableFullscreenListener != null) {
             onEnableFullscreenListener.onEnableFullScreen(enable);
         }
@@ -382,7 +377,8 @@ public class PassageView extends RelativeLayout {
     private void clearContentBuilderRecord() {
         for (ContentBuilder builder :
                 contentBuilders) {
-            builder.setScrollPos(0);
+            //builder.setScrollPos(0);
+            builder.reset();
         }
     }
 
@@ -433,6 +429,11 @@ public class PassageView extends RelativeLayout {
 
         public void setScrollPos(int position) {
             scrollPos = position;
+        }
+
+        public void reset() {
+            setScrollPos(0);
+            value = null;
         }
 
         public abstract String build(Passage passage);
