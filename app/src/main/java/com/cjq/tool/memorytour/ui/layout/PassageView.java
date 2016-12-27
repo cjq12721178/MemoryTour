@@ -1,6 +1,7 @@
 package com.cjq.tool.memorytour.ui.layout;
 
 import android.content.Context;
+import android.os.Handler;
 import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
@@ -54,6 +55,8 @@ public class PassageView extends RelativeLayout {
     private int prevPassageId;
     private int prevCheckedPanelId;
     private ContentBuilder[] contentBuilders;
+    private Handler handler;
+    private ScrollPositionKeeper scrollPositionKeeper = new ScrollPositionKeeper();
 
     private View.OnClickListener onFunctionPanelClickListener = new OnClickListener() {
         @Override
@@ -189,7 +192,8 @@ public class PassageView extends RelativeLayout {
             tvPassageContent.setGravity(realContent.charAt(0) == '　' ? Gravity.START : Gravity.CENTER_HORIZONTAL);
             //设置滚动位置
             if (prevPassageId == currPassageId) {
-                setBrowsePosition(contentBuilder.getScrollPos());
+                scrollPositionKeeper.setPosition(contentBuilder.getScrollPos());
+                handler.post(scrollPositionKeeper);
             }
             prevPassageId = currPassageId;
         }
@@ -197,6 +201,7 @@ public class PassageView extends RelativeLayout {
 
     public PassageView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        handler = new Handler();
         initContentBuilder(context);
         View view = LayoutInflater.from(context).inflate(R.layout.group_passage_view, this);
         rgContentPanel = (RadioGroup)view.findViewById(R.id.rdo_grp_content_panel);
@@ -267,6 +272,8 @@ public class PassageView extends RelativeLayout {
 
     private void setBrowsePosition(int position) {
         svPassageCarrier.setScrollY(position);
+        //svPassageCarrier.scrollTo(0, position);
+        //svPassageCarrier.smoothScrollTo(0, position);
     }
 
     private void showPassage(Passage passage, @IdRes int content) {
@@ -294,9 +301,9 @@ public class PassageView extends RelativeLayout {
             Prompter.show(R.string.ppt_current_passage_empty);
             return;
         }
-        int pos = getCurrentBrowsePosition();
+        //int pos = getCurrentBrowsePosition();
         showPassage(passage, R.id.rdo_main_body);
-        setBrowsePosition(pos);
+        //setBrowsePosition(pos);
     }
 
     public void showNext() {
@@ -379,6 +386,21 @@ public class PassageView extends RelativeLayout {
                 contentBuilders) {
             //builder.setScrollPos(0);
             builder.reset();
+        }
+    }
+
+    private static class ScrollPositionKeeper implements Runnable {
+
+        private int position;
+
+        public ScrollPositionKeeper setPosition(int position) {
+            this.position = position;
+            return this;
+        }
+
+        @Override
+        public void run() {
+
         }
     }
 

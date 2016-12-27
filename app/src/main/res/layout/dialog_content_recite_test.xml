@@ -12,7 +12,7 @@
         android:id="@+id/tv_recite_name_content"
         android:textSize="@dimen/size_text_dialog"
         android:gravity="center_horizontal"
-        android:drawableRight="@drawable/ic_modify_custom_name"/>
+        android:drawableRight="@drawable/ic_modify_custom_name" />
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
