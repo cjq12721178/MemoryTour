@@ -1,11 +1,14 @@
 package com.cjq.tool.memorytour.ui.fragment;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.annotation.StringRes;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,6 +25,7 @@ import com.cjq.tool.memorytour.io.sqlite.SQLiteManager;
 import com.cjq.tool.memorytour.ui.activity.NewMissionEditActivity;
 import com.cjq.tool.memorytour.ui.dialog.LoadingDialog;
 import com.cjq.tool.memorytour.util.Logger;
+import com.cjq.tool.memorytour.util.Tag;
 
 import org.xml.sax.helpers.DefaultHandler;
 
@@ -39,6 +43,7 @@ import javax.xml.parsers.SAXParserFactory;
 public class SpecialFunctionFragment extends BaseFragment {
 
     private static final int REQUEST_CODE_FILE_SELECT = 1;
+    private static final String CONFIG_FILE_NAME = "config";
     private CheckBox chkBooks;
     private CheckBox chkChapters;
     private CheckBox chkPassages;
@@ -58,7 +63,7 @@ public class SpecialFunctionFragment extends BaseFragment {
         @Override
         public boolean onLongClick(View v) {
             Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-            intent.setType("*/*");
+            intent.setType("text/plain");
             intent.addCategory(Intent.CATEGORY_OPENABLE);
             chkCurrentSections = (CheckBox) v;
             try {
@@ -76,9 +81,13 @@ public class SpecialFunctionFragment extends BaseFragment {
                 requestCode == REQUEST_CODE_FILE_SELECT) {
             Uri uri = data.getData();
             String filePath = uri.getPath();
-            Log.d("MemoryTour", "file path = " + filePath);
-            if (chkCurrentSections != null) {
+            if (chkCurrentSections != null &&
+                    !chkCurrentSections.getText().toString().equals(filePath)) {
                 chkCurrentSections.setText(filePath);
+                getContext().getSharedPreferences(CONFIG_FILE_NAME, Context.MODE_PRIVATE)
+                        .edit()
+                        .putString(chkCurrentSections.getTag().toString(), filePath)
+                        .commit();
                 chkCurrentSections = null;
             }
         }
@@ -106,19 +115,42 @@ public class SpecialFunctionFragment extends BaseFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_special_function, null);
-        chkBooks = setSectionImportView(view.findViewById(R.id.il_books_import), R.string.tv_import_books_label, R.string.tv_import_books_path);
-        chkChapters = setSectionImportView(view.findViewById(R.id.il_chapters_import), R.string.tv_import_chapters_label, R.string.tv_import_chapters_path);
-        chkPassages = setSectionImportView(view.findViewById(R.id.il_passages_import), R.string.tv_import_passages_label, R.string.tv_import_passages_path);
+        SharedPreferences config = inflater.getContext().getSharedPreferences(CONFIG_FILE_NAME, Context.MODE_PRIVATE);
+        chkBooks = setSectionImportView(view.findViewById(R.id.il_books_import),
+                R.string.tv_import_books_label,
+                config,
+                Tag.SP_BOOK_PATH,
+                R.string.tv_import_books_path);
+        chkChapters = setSectionImportView(view.findViewById(R.id.il_chapters_import),
+                R.string.tv_import_chapters_label,
+                config,
+                Tag.SP_CHAPTER_PATH,
+                R.string.tv_import_chapters_path);
+        chkPassages = setSectionImportView(view.findViewById(R.id.il_passages_import),
+                R.string.tv_import_passages_label,
+                config,
+                Tag.SP_PASSAGE_PATH,
+                R.string.tv_import_passages_path);
         view.findViewById(R.id.btn_section_save).setOnClickListener(onMoveSectionToDatabaseListener);
         view.findViewById(R.id.btn_add_to_recite).setOnClickListener(onAddToReciteListener);
         return view;
     }
 
-    private CheckBox setSectionImportView(View ilImportGroup, int labelResId, int defaultPathResId) {
+    private CheckBox setSectionImportView(View ilImportGroup,
+                                          @StringRes int labelResId,
+                                          SharedPreferences preferences,
+                                          String configKey,
+                                          int defaultPathResId) {
         TextView tvSectionType = (TextView)ilImportGroup.findViewById(R.id.tv_section_import_type);
         tvSectionType.setText(labelResId);
         CheckBox chkSection = (CheckBox)ilImportGroup.findViewById(R.id.chk_section_import_path_and_enable);
-        chkSection.setText(defaultPathResId);
+        String customPath = preferences.getString(configKey, null);
+        if (customPath != null) {
+            chkSection.setText(customPath);
+        } else {
+            chkSection.setText(defaultPathResId);
+        }
+        chkSection.setTag(configKey);
         chkSection.setOnLongClickListener(onFilePathChangeListener);
         return chkSection;
     }

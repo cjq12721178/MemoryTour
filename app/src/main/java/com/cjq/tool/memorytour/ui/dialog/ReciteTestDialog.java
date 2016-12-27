@@ -12,6 +12,7 @@ import android.widget.TextView;
 import com.cjq.tool.memorytour.R;
 import com.cjq.tool.memorytour.bean.Passage;
 import com.cjq.tool.memorytour.ui.toast.Prompter;
+import com.cjq.tool.memorytour.ui.view.TextViewEx;
 import com.cjq.tool.memorytour.util.TimeFormatter;
 
 /**
@@ -28,7 +29,7 @@ public class ReciteTestDialog extends BaseDialog {
     }
 
     private static final String TAG = "test";
-    private TextView tvCustomName;
+    private TextViewEx tvCustomName;
     private TextView tvExpectReciteTime;
     private RadioGroup rgReciteResult;
     private Passage passage;
@@ -92,8 +93,9 @@ public class ReciteTestDialog extends BaseDialog {
     @Override
     protected void onFindView(View content, @Nullable Bundle savedInstanceState) {
         setCancelable(false);
-        tvCustomName = (TextView)content.findViewById(R.id.tv_recite_name_content);
+        tvCustomName = (TextViewEx) content.findViewById(R.id.tv_recite_name_content);
         tvCustomName.setOnClickListener(onCustomNameClickListener);
+
         tvExpectReciteTime = (TextView)content.findViewById(R.id.tv_expect_recite_time_content);
         rgReciteResult = (RadioGroup)content.findViewById(R.id.rg_recite_result);
         rgReciteResult.setOnCheckedChangeListener(onReciteResultChangedListener);
