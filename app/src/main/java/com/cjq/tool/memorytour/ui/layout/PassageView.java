@@ -23,6 +23,7 @@ import com.cjq.tool.memorytour.R;
 import com.cjq.tool.memorytour.bean.Passage;
 import com.cjq.tool.memorytour.ui.dialog.ExperienceEditDialog;
 import com.cjq.tool.memorytour.ui.dialog.HistoryRecordDialog;
+import com.cjq.tool.memorytour.ui.listener.OnListItemClickListener;
 import com.cjq.tool.memorytour.ui.toast.Prompter;
 import com.cjq.tool.memorytour.util.Converter;
 import com.cjq.tool.memorytour.util.Logger;
@@ -36,7 +37,7 @@ public class PassageView extends RelativeLayout {
         void onEnableFullScreen(boolean enable);
     }
 
-    private static final int SLIDE_SWITCH_THRESHOLD = 10;
+    private static final int SLIDE_SWITCH_THRESHOLD = 100;
     private static final int CLICK_THRESHOLD = 5;
     private TextView tvPassageTitle;
     private TextView tvPassageContent;
@@ -112,19 +113,18 @@ public class PassageView extends RelativeLayout {
                 case MotionEvent.ACTION_UP: {
                     x = event.getX() - x;
                     y = Math.abs(event.getY() - y);
-                    if (y < CLICK_THRESHOLD && (x > -SLIDE_SWITCH_THRESHOLD || x < SLIDE_SWITCH_THRESHOLD)) {
+                    float absX = Math.abs(x);
+                    if (y < CLICK_THRESHOLD && absX < CLICK_THRESHOLD) {
                         enableFullscreen(rgContentPanel.getVisibility() == VISIBLE);
                         return true;
                     }
-                    if (enableSlideSwitch) {
-                        if (x > 0) {
-                            if (x > y) {
-                                showPrev();
-                            }
-                        } else {
-                            if (-x > y) {
-                                showNext();
-                            }
+                    if (enableSlideSwitch && absX > SLIDE_SWITCH_THRESHOLD) {
+                        if (x > y) {
+                            showPrev();
+                            return true;
+                        } else if (-x > y) {
+                            showNext();
+                            return true;
                         }
                     }
                 } break;
@@ -389,7 +389,7 @@ public class PassageView extends RelativeLayout {
         }
     }
 
-    private static class ScrollPositionKeeper implements Runnable {
+    private class ScrollPositionKeeper implements Runnable {
 
         private int position;
 
@@ -400,7 +400,7 @@ public class PassageView extends RelativeLayout {
 
         @Override
         public void run() {
-
+            setBrowsePosition(position);
         }
     }
 
