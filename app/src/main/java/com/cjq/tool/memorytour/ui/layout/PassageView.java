@@ -1,19 +1,13 @@
 package com.cjq.tool.memorytour.ui.layout;
 
-import android.content.ClipData;
-import android.content.ClipboardManager;
 import android.content.Context;
-import android.graphics.Color;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentManager;
-import android.text.Editable;
 import android.text.Layout;
-import android.text.Spanned;
 import android.text.TextUtils;
-import android.text.style.BackgroundColorSpan;
 import android.util.AttributeSet;
 import android.view.ActionMode;
 import android.view.Gravity;
@@ -23,11 +17,8 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
-import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
-import android.widget.PopupWindow;
 import android.widget.RadioGroup;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
@@ -50,6 +41,15 @@ public class PassageView extends RelativeLayout {
         void onEnableFullScreen(boolean enable);
     }
 
+    public interface OnPassageShowListener {
+        void onShowPrev(Passage passage);
+        void onShowNext(Passage passage);
+    }
+
+    public interface OnExperienceChangedListener {
+        void onExperienceChanged(PassageView passageView, Passage passage, String newExperience);
+    }
+
     private TextView tvPassageTitle;
     private TextView tvPassageContent;
     private RadioGroup rgContentPanel;
@@ -57,6 +57,7 @@ public class PassageView extends RelativeLayout {
     private ImageButton ibSetExperience;
     private ImageButton ibHistoryRecord;
     private Adapter adapter;
+    private TouchHandler touchHandler;
     private OnPassageShowListener onPassageShowListener;
     private boolean enableSlideSwitch = false;
     private OnEnableFullscreenListener onEnableFullscreenListener;
@@ -67,86 +68,56 @@ public class PassageView extends RelativeLayout {
     private int prevPassageId;
     private int prevCheckedPanelId;
     private ContentBuilder[] contentBuilders;
-    private Handler handler;
+    //private Handler handler;
     private ScrollPositionKeeper scrollPositionKeeper = new ScrollPositionKeeper();
 
-    private View.OnClickListener onFunctionPanelClickListener = new OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            final Passage passage = adapter.currPassage();
-            if (passage == null) {
-                Prompter.show(R.string.ppt_passage_content_null);
-            } else {
-                if (fragmentManager != null) {
-                    switch (v.getId()) {
-                        case R.id.ib_set_experience:onExperienceEditorClick(passage);break;
-                        case R.id.ib_history_record:onHistoryRecordViewerClick(passage);break;
-                        default:
-                            Logger.record("未点中任何功能按钮");break;
-                    }
-                }
-            }
-        }
+//    private View.OnClickListener onFunctionPanelClickListener = new OnClickListener() {
+//        @Override
+//        public void onClick(View v) {
+//            final Passage passage = adapter.currPassage();
+//            if (passage == null) {
+//                Prompter.show(R.string.ppt_passage_content_null);
+//            } else {
+//                if (fragmentManager != null) {
+//                    switch (v.getId()) {
+//                        case R.id.ib_set_experience:onExperienceEditorClick(passage);break;
+//                        case R.id.ib_history_record:onHistoryRecordViewerClick(passage);break;
+//                        default:
+//                            Logger.record("未点中任何功能按钮");break;
+//                    }
+//                }
+//            }
+//        }
+//
+//        private void onExperienceEditorClick(final Passage passage) {
+//            if (experienceEditDialog == null) {
+//                experienceEditDialog = new ExperienceEditDialog();
+//                experienceEditDialog.setOnSetExperienceListener(new ExperienceEditDialog.OnSetExperienceListener() {
+//                    @Override
+//                    public void onSetExperience(String newExperience, boolean addOrModify) {
+//                        if (onExperienceChangedListener != null) {
+//                            onExperienceChangedListener.onExperienceChanged(PassageView.this,
+//                                    passage, getNewExperience(passage, formatExperience(newExperience), addOrModify));
+//                        }
+//                    }
+//                });
+//            }
+//            experienceEditDialog.show(fragmentManager, passage.getExperience());
+//        }
+//
+//        private void onHistoryRecordViewerClick(Passage passage) {
+//            historyRecordDialog.show(fragmentManager, passage.getHistoryRecords());
+//        }
+//    };
 
-        private void onExperienceEditorClick(final Passage passage) {
-            if (experienceEditDialog == null) {
-                experienceEditDialog = new ExperienceEditDialog();
-                experienceEditDialog.setOnSetExperienceListener(new ExperienceEditDialog.OnSetExperienceListener() {
-                    @Override
-                    public void onSetExperience(String newExperience, boolean addOrModify) {
-                        if (onExperienceChangedListener != null) {
-                            onExperienceChangedListener.onExperienceChanged(PassageView.this,
-                                    passage, getNewExperience(passage, formatExperience(newExperience), addOrModify));
-                        }
-                    }
-                });
-            }
-            experienceEditDialog.show(fragmentManager, passage.getExperience());
-        }
 
-        private void onHistoryRecordViewerClick(Passage passage) {
-            historyRecordDialog.show(fragmentManager, passage.getHistoryRecords());
-        }
-    };
 
-    private void enableFullscreen(boolean enable) {
-        if (enable) {
-            ibSetExperience.setVisibility(INVISIBLE);
-            if (ibHistoryRecord != null) {
-                ibHistoryRecord.setVisibility(INVISIBLE);
-            }
-            rgContentPanel.setVisibility(GONE);
-        } else {
-            ibSetExperience.setVisibility(VISIBLE);
-            if (ibHistoryRecord != null) {
-                ibHistoryRecord.setVisibility(VISIBLE);
-            }
-            rgContentPanel.setVisibility(VISIBLE);
-        }
-        if (onEnableFullscreenListener != null) {
-            onEnableFullscreenListener.onEnableFullScreen(enable);
-        }
-    }
-
-    public void setOnPassageShowListener(OnPassageShowListener l) {
-        this.onPassageShowListener = l;
-    }
-
-    public interface OnPassageShowListener {
-        void onShowPrev(Passage passage);
-        void onShowNext(Passage passage);
-    }
-
-    public interface OnExperienceChangedListener {
-        void onExperienceChanged(PassageView passageView, Passage passage, String newExperience);
-    }
-
-    private RadioGroup.OnCheckedChangeListener onCheckedChangeListener = new RadioGroup.OnCheckedChangeListener() {
-        @Override
-        public void onCheckedChanged(RadioGroup group, int checkedId) {
-            changeContent(adapter.currPassage(), checkedId);
-        }
-    };
+//    private RadioGroup.OnCheckedChangeListener onCheckedChangeListener = new RadioGroup.OnCheckedChangeListener() {
+//        @Override
+//        public void onCheckedChanged(RadioGroup group, int checkedId) {
+//            changeContent(adapter.currPassage(), checkedId);
+//        }
+//    };
 
     private void changeContent(Passage passage, @IdRes int checkedPanelId) {
         if (passage == null) {
@@ -169,7 +140,7 @@ public class PassageView extends RelativeLayout {
             //设置滚动位置
             if (prevPassageId == currPassageId) {
                 scrollPositionKeeper.setPosition(contentBuilder.getScrollPos());
-                handler.post(scrollPositionKeeper);
+                touchHandler.post(scrollPositionKeeper);
             }
             prevPassageId = currPassageId;
         }
@@ -177,48 +148,28 @@ public class PassageView extends RelativeLayout {
 
     public PassageView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        handler = new Handler();
+        //handler = new Handler();
+        touchHandler = new TouchHandler();
         initContentBuilder(context);
         View view = LayoutInflater.from(context).inflate(R.layout.group_passage_view, this);
         rgContentPanel = (RadioGroup)view.findViewById(R.id.rdo_grp_content_panel);
-        rgContentPanel.setOnCheckedChangeListener(onCheckedChangeListener);
+        rgContentPanel.setOnCheckedChangeListener(touchHandler);
         svPassageCarrier = (ScrollView)view.findViewById(R.id.sv_passage_carrier);
-        final TouchHandler touchHandler = new TouchHandler(handler);
         svPassageCarrier.setOnTouchListener(touchHandler);
         tvPassageTitle = (TextView)view.findViewById(R.id.tv_passage_header);
         tvPassageContent = (TextView)view.findViewById(R.id.tv_passage_content);
-        tvPassageContent.setCustomSelectionActionModeCallback(new ActionMode.Callback() {
-            @Override
-            public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-                return true;
-            }
-
-            @Override
-            public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-                return false;
-            }
-
-            @Override
-            public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-                return false;
-            }
-
-            @Override
-            public void onDestroyActionMode(ActionMode mode) {
-                //tvPassageContent.setTextIsSelectable(false);
-                //touchHandler.setInLongPress(false);
-                //touchHandler.setTextIsSelectable(false);
-                //handler.sendEmptyMessage()
-                touchHandler.finishSelectMode();
-            }
-        });
+        tvPassageContent.setCustomSelectionActionModeCallback(touchHandler);
         adapter = emptyAdapter;
         setExperienceEditor();
     }
 
+    public void setOnPassageShowListener(OnPassageShowListener l) {
+        this.onPassageShowListener = l;
+    }
+
     private void setExperienceEditor() {
         ibSetExperience = (ImageButton)findViewById(R.id.ib_set_experience);
-        ibSetExperience.setOnClickListener(onFunctionPanelClickListener);
+        ibSetExperience.setOnClickListener(touchHandler);
     }
 
     private String getNewExperience(Passage passage, String newExperience, boolean addOrModify) {
@@ -263,7 +214,7 @@ public class PassageView extends RelativeLayout {
         if (startHistoryRecordViewer && ibHistoryRecord == null) {
             ViewStub vsHistoryRecord = (ViewStub) findViewById(R.id.vs_history_record);
             ibHistoryRecord = (ImageButton)vsHistoryRecord.inflate();
-            ibHistoryRecord.setOnClickListener(onFunctionPanelClickListener);
+            ibHistoryRecord.setOnClickListener(touchHandler);
             historyRecordDialog = new HistoryRecordDialog();
         }
     }
@@ -274,8 +225,6 @@ public class PassageView extends RelativeLayout {
 
     private void setBrowsePosition(int position) {
         svPassageCarrier.setScrollY(position);
-        //svPassageCarrier.scrollTo(0, position);
-        //svPassageCarrier.smoothScrollTo(0, position);
     }
 
     private void showPassage(Passage passage, @IdRes int content) {
@@ -293,7 +242,6 @@ public class PassageView extends RelativeLayout {
 
     //注意，该方法只能在当前章节的各个部分进行切换
     public void showContent(@IdRes int content) {
-        //rgContentPanel.check(content);
         showContent(adapter.currPassage(), content);
     }
 
@@ -303,9 +251,7 @@ public class PassageView extends RelativeLayout {
             Prompter.show(R.string.ppt_current_passage_empty);
             return;
         }
-        //int pos = getCurrentBrowsePosition();
         showPassage(passage, R.id.rdo_main_body);
-        //setBrowsePosition(pos);
     }
 
     public void showNext() {
@@ -386,78 +332,42 @@ public class PassageView extends RelativeLayout {
     private void clearContentBuilderRecord() {
         for (ContentBuilder builder :
                 contentBuilders) {
-            //builder.setScrollPos(0);
             builder.reset();
         }
     }
 
     private class TouchHandler
             extends Handler
-            implements OnTouchListener {
+            implements OnTouchListener,
+            View.OnClickListener,
+            RadioGroup.OnCheckedChangeListener,
+            ActionMode.Callback {
 
         float downX;
         float downY;
         boolean inLongPress;
-        boolean textIsSelectable;
         boolean inLongPressRegion;
-        int start = -1;
-        String selectedText;
         static final int LONG_PRESS = 1;
         static final int SELECT_FINISH = 2;
         static final int SLIDE_SWITCH_THRESHOLD = 100;
         static final int CLICK_THRESHOLD = 5;
         final float maxTouchSlopSquare;
         final long longPressTimeout;
-        //final BackgroundColorSpan colorSpan = new BackgroundColorSpan(Color.BLUE);
-        //PopupWindow selectPrompter;
 
-        TouchHandler(Handler handler) {
-            super(handler.getLooper());
+        TouchHandler() {
+            super();
             ViewConfiguration viewConfiguration = ViewConfiguration.get(getContext());
             int touchSlop = viewConfiguration.getScaledTouchSlop();
             maxTouchSlopSquare = touchSlop * touchSlop;
             longPressTimeout = viewConfiguration.getLongPressTimeout();
-
-//            LinearLayout selectLayout = (LinearLayout)LayoutInflater.from(getContext()).inflate(R.layout.popup_select_prompter, null);
-//            selectLayout.findViewById(R.id.tv_copy).setOnClickListener(this);
-//            selectLayout.findViewById(R.id.tv_select_all).setOnClickListener(this);
-//            selectLayout.findViewById(R.id.tv_cancel).setOnClickListener(this);
-//            selectPrompter = new PopupWindow(selectLayout,
-//            ViewGroup.LayoutParams.WRAP_CONTENT,
-//            ViewGroup.LayoutParams.WRAP_CONTENT);
-//            TextView tvSelectPrompter = (TextView) View.inflate(getContext(), R.layout.popup_select_prompter, null);
-//            tvSelectPrompter.setOnClickListener(new OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    if (!TextUtils.isEmpty(selectedText)) {
-//                        inLongPress = false;
-//                        copyPrompter.dismiss();
-//                        tvPassageContent.getEditableText().removeSpan(colorSpan);
-//                        ClipboardManager clipboardManager = (ClipboardManager)getContext().getSystemService(Context.CLIPBOARD_SERVICE);
-//                        clipboardManager.setPrimaryClip(ClipData.newPlainText(null, selectedText));
-//                    }
-//                }
-//            });
-//            copyPrompter = new PopupWindow(tvSelectPrompter,
-//                    ViewGroup.LayoutParams.WRAP_CONTENT,
-//                    ViewGroup.LayoutParams.WRAP_CONTENT);
-//            copyPrompter.setFocusable(true);
-        }
-
-        public void setTextIsSelectable(boolean textIsSelectable) {
-            this.textIsSelectable = textIsSelectable;
         }
 
         @Override
         public void handleMessage(Message msg) {
             if (msg.what == LONG_PRESS) {
                 inLongPress = true;
-                textIsSelectable = true;
-                //selectPrompter.showAtLocation(svPassageCarrier, Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 0);
-                //tvPassageContent.setTextIsSelectable(true);
                 tvPassageContent.setTextIsSelectable(true);
                 tvPassageContent.performLongClick();
-                //Prompter.show("onLongClick");
             } else if (msg.what == SELECT_FINISH) {
                 tvPassageContent.setTextIsSelectable(false);
                 inLongPress = false;
@@ -465,10 +375,13 @@ public class PassageView extends RelativeLayout {
             super.handleMessage(msg);
         }
 
+        //处理章节内容部位的触摸事件，包括：
+        // 1. 单击查字
+        // 2. 长按选择
+        // 3. 垂直滑动显示章节内容
+        // 4. 水平滑动切换章节（可选）
         @Override
         public boolean onTouch(View v, MotionEvent event) {
-//            if (inLongPress)
-//                return onTouchInLongPress(event);
             if (inLongPress)
                 return false;
 
@@ -489,10 +402,6 @@ public class PassageView extends RelativeLayout {
                     }
                 } break;
                 case MotionEvent.ACTION_UP: {
-//                    if (inLongPress) {
-//                        inLongPress = false;
-//                        break;
-//                    }
                     if (inLongPressRegion) {
                         removeMessages(LONG_PRESS);
                     }
@@ -504,7 +413,8 @@ public class PassageView extends RelativeLayout {
                         if (c == 0) {
                             enableFullscreen(rgContentPanel.getVisibility() == VISIBLE);
                         } else {
-                            Prompter.show(String.valueOf(c));
+                            //Prompter.show(String.valueOf(c));
+                            //TODO 单击查字
                         }
                         return true;
                     }
@@ -521,42 +431,6 @@ public class PassageView extends RelativeLayout {
             }
             return false;
         }
-
-//        boolean onTouchInLongPress(MotionEvent event) {
-//            int action = event.getActionMasked();
-//            switch (action) {
-//                case MotionEvent.ACTION_DOWN: {
-//                    start = getSelectOffset(event.getX(), event.getY());
-//                } break;
-//                case MotionEvent.ACTION_MOVE:
-//                case MotionEvent.ACTION_UP: {
-//                    if (start == -1)
-//                        break;
-//                    float x = event.getX();
-//                    float y = event.getY();
-//                    int end = getSelectOffset(x, y);
-//                    if (start == end) {
-//                        if (action == MotionEvent.ACTION_UP) {
-//                            start = -1;
-//                        }
-//                    } else {
-//                        if (start > end) {
-//                            int tmp = start;
-//                            start = end;
-//                            end = tmp;
-//                        }
-//                        Editable editable = tvPassageContent.getEditableText();
-//                        editable.setSpan(colorSpan, start, end, Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
-//                        if (action == MotionEvent.ACTION_UP) {
-//                            selectedText = editable.subSequence(start, end).toString();
-//                            start = -1;
-//                            //copyPrompter.showAtLocation(svPassageCarrier, Gravity.NO_GRAVITY, (int)x, (int)y);
-//                        }
-//                    }
-//                } break;
-//            }
-//            return true;
-//        }
 
         boolean isInLongPressRegion(float deltaX, float deltaY) {
             return deltaX * deltaX + deltaY * deltaY < maxTouchSlopSquare;
@@ -590,42 +464,102 @@ public class PassageView extends RelativeLayout {
                     (c >= '\uf900' && c <= '\ufa2d');
         }
 
-        int getSelectOffset(float x, float y) {
-            Layout layout = tvPassageContent.getLayout();
-            int line = layout.getLineForVertical(getRealVertical(y));
-            return layout.getOffsetForHorizontal(line, x);
-        }
-
         int getRealVertical(float y) {
             return svPassageCarrier.getScrollY() + (int)y - tvPassageTitle.getBottom();
         }
 
-        public void setInLongPress(boolean inLongPress) {
-            this.inLongPress = inLongPress;
+        void enableFullscreen(boolean enable) {
+            if (enable) {
+                ibSetExperience.setVisibility(INVISIBLE);
+                if (ibHistoryRecord != null) {
+                    ibHistoryRecord.setVisibility(INVISIBLE);
+                }
+                rgContentPanel.setVisibility(GONE);
+            } else {
+                ibSetExperience.setVisibility(VISIBLE);
+                if (ibHistoryRecord != null) {
+                    ibHistoryRecord.setVisibility(VISIBLE);
+                }
+                rgContentPanel.setVisibility(VISIBLE);
+            }
+            if (onEnableFullscreenListener != null) {
+                onEnableFullscreenListener.onEnableFullScreen(enable);
+            }
         }
 
-        public void finishSelectMode() {
+        void finishSelectMode() {
             sendEmptyMessage(SELECT_FINISH);
         }
 
-//        @Override
-//        public void onClick(View v) {
-//            int id = v.getId();
-//            if (id == R.id.tv_copy || id == R.id.tv_cancel) {
-//                if (id == R.id.tv_copy && !TextUtils.isEmpty(selectedText)) {
-//                    ClipboardManager clipboardManager = (ClipboardManager)getContext().getSystemService(Context.CLIPBOARD_SERVICE);
-//                    clipboardManager.setPrimaryClip(ClipData.newPlainText(null, selectedText));
-//                }
-//                inLongPress = false;
-//                selectPrompter.dismiss();
-//                tvPassageContent.getEditableText().removeSpan(colorSpan);
-//            } else if (id == R.id.tv_select_all) {
-//                Editable editable = tvPassageContent.getEditableText();
-//                if (editable.length() > 0) {
-//                    editable.setSpan(colorSpan, 0, editable.length(), Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
-//                }
-//            }
-//        }
+        //处理各类点击事件，目前以功能面板为主（包括查看历史记忆记录，添加或修改心得体会）
+        @Override
+        public void onClick(View v) {
+            int id = v.getId();
+            if (id == R.id.ib_set_experience ||
+                    id == R.id.ib_history_record) {
+                onFunctionPanelClick(id);
+            }
+        }
+
+        void onFunctionPanelClick(@IdRes int id) {
+            final Passage passage = adapter.currPassage();
+            if (passage == null) {
+                Prompter.show(R.string.ppt_passage_content_null);
+            } else {
+                if (fragmentManager != null) {
+                    switch (id) {
+                        case R.id.ib_set_experience:onExperienceEditorClick(passage);break;
+                        case R.id.ib_history_record:onHistoryRecordViewerClick(passage);break;
+                        default:Logger.record("未点中任何功能按钮");break;
+                    }
+                }
+            }
+        }
+
+        void onExperienceEditorClick(final Passage passage) {
+            if (experienceEditDialog == null) {
+                experienceEditDialog = new ExperienceEditDialog();
+                experienceEditDialog.setOnSetExperienceListener(new ExperienceEditDialog.OnSetExperienceListener() {
+                    @Override
+                    public void onSetExperience(String newExperience, boolean addOrModify) {
+                        if (onExperienceChangedListener != null) {
+                            onExperienceChangedListener.onExperienceChanged(PassageView.this,
+                                    passage, getNewExperience(passage, formatExperience(newExperience), addOrModify));
+                        }
+                    }
+                });
+            }
+            experienceEditDialog.show(fragmentManager, passage.getExperience());
+        }
+
+        void onHistoryRecordViewerClick(Passage passage) {
+            historyRecordDialog.show(fragmentManager, passage.getHistoryRecords());
+        }
+
+        @Override
+        public void onCheckedChanged(RadioGroup group, int checkedId) {
+            changeContent(adapter.currPassage(), checkedId);
+        }
+
+        @Override
+        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+            return true;
+        }
+
+        @Override
+        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+            return false;
+        }
+
+        @Override
+        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+            return false;
+        }
+
+        @Override
+        public void onDestroyActionMode(ActionMode mode) {
+            finishSelectMode();
+        }
     };
 
     private class ScrollPositionKeeper implements Runnable {
@@ -717,7 +651,6 @@ public class PassageView extends RelativeLayout {
             if (TextUtils.isEmpty(content)) {
                 content = nullContentWarnInfo;
             }
-            //String realContent;
             if (builder.length() > 0) {
                 builder.append(content);
                 value = builder.toString();
