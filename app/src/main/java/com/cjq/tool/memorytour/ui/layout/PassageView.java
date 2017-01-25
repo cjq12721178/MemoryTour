@@ -1,19 +1,33 @@
 package com.cjq.tool.memorytour.ui.layout;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
+import android.graphics.Color;
 import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
-import android.support.annotation.StringRes;
 import android.support.v4.app.FragmentManager;
+import android.text.Editable;
+import android.text.Layout;
+import android.text.Spanned;
 import android.text.TextUtils;
+import android.text.style.BackgroundColorSpan;
 import android.util.AttributeSet;
+import android.view.ActionMode;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
+import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 import android.widget.RadioGroup;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
@@ -23,7 +37,6 @@ import com.cjq.tool.memorytour.R;
 import com.cjq.tool.memorytour.bean.Passage;
 import com.cjq.tool.memorytour.ui.dialog.ExperienceEditDialog;
 import com.cjq.tool.memorytour.ui.dialog.HistoryRecordDialog;
-import com.cjq.tool.memorytour.ui.listener.OnListItemClickListener;
 import com.cjq.tool.memorytour.ui.toast.Prompter;
 import com.cjq.tool.memorytour.util.Converter;
 import com.cjq.tool.memorytour.util.Logger;
@@ -37,8 +50,6 @@ public class PassageView extends RelativeLayout {
         void onEnableFullScreen(boolean enable);
     }
 
-    private static final int SLIDE_SWITCH_THRESHOLD = 100;
-    private static final int CLICK_THRESHOLD = 5;
     private TextView tvPassageTitle;
     private TextView tvPassageContent;
     private RadioGroup rgContentPanel;
@@ -95,41 +106,6 @@ public class PassageView extends RelativeLayout {
 
         private void onHistoryRecordViewerClick(Passage passage) {
             historyRecordDialog.show(fragmentManager, passage.getHistoryRecords());
-        }
-    };
-
-    private OnTouchListener onPassageTouchListener = new OnTouchListener() {
-
-        float x;
-        float y;
-
-        @Override
-        public boolean onTouch(View v, MotionEvent event) {
-            switch (event.getActionMasked()) {
-                case MotionEvent.ACTION_DOWN: {
-                    x = event.getX();
-                    y = event.getY();
-                } break;
-                case MotionEvent.ACTION_UP: {
-                    x = event.getX() - x;
-                    y = Math.abs(event.getY() - y);
-                    float absX = Math.abs(x);
-                    if (y < CLICK_THRESHOLD && absX < CLICK_THRESHOLD) {
-                        enableFullscreen(rgContentPanel.getVisibility() == VISIBLE);
-                        return true;
-                    }
-                    if (enableSlideSwitch && absX > SLIDE_SWITCH_THRESHOLD) {
-                        if (x > y) {
-                            showPrev();
-                            return true;
-                        } else if (-x > y) {
-                            showNext();
-                            return true;
-                        }
-                    }
-                } break;
-            }
-            return false;
         }
     };
 
@@ -207,9 +183,35 @@ public class PassageView extends RelativeLayout {
         rgContentPanel = (RadioGroup)view.findViewById(R.id.rdo_grp_content_panel);
         rgContentPanel.setOnCheckedChangeListener(onCheckedChangeListener);
         svPassageCarrier = (ScrollView)view.findViewById(R.id.sv_passage_carrier);
-        svPassageCarrier.setOnTouchListener(onPassageTouchListener);
+        final TouchHandler touchHandler = new TouchHandler(handler);
+        svPassageCarrier.setOnTouchListener(touchHandler);
         tvPassageTitle = (TextView)view.findViewById(R.id.tv_passage_header);
         tvPassageContent = (TextView)view.findViewById(R.id.tv_passage_content);
+        tvPassageContent.setCustomSelectionActionModeCallback(new ActionMode.Callback() {
+            @Override
+            public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+                return true;
+            }
+
+            @Override
+            public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+                return false;
+            }
+
+            @Override
+            public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+                return false;
+            }
+
+            @Override
+            public void onDestroyActionMode(ActionMode mode) {
+                //tvPassageContent.setTextIsSelectable(false);
+                //touchHandler.setInLongPress(false);
+                //touchHandler.setTextIsSelectable(false);
+                //handler.sendEmptyMessage()
+                touchHandler.finishSelectMode();
+            }
+        });
         adapter = emptyAdapter;
         setExperienceEditor();
     }
@@ -353,7 +355,7 @@ public class PassageView extends RelativeLayout {
         this.adapter = adapter;
     }
 
-    public void empty() {
+    public void clear() {
         tvPassageTitle.setText("");
         tvPassageContent.setText("");
     }
@@ -388,6 +390,243 @@ public class PassageView extends RelativeLayout {
             builder.reset();
         }
     }
+
+    private class TouchHandler
+            extends Handler
+            implements OnTouchListener {
+
+        float downX;
+        float downY;
+        boolean inLongPress;
+        boolean textIsSelectable;
+        boolean inLongPressRegion;
+        int start = -1;
+        String selectedText;
+        static final int LONG_PRESS = 1;
+        static final int SELECT_FINISH = 2;
+        static final int SLIDE_SWITCH_THRESHOLD = 100;
+        static final int CLICK_THRESHOLD = 5;
+        final float maxTouchSlopSquare;
+        final long longPressTimeout;
+        //final BackgroundColorSpan colorSpan = new BackgroundColorSpan(Color.BLUE);
+        //PopupWindow selectPrompter;
+
+        TouchHandler(Handler handler) {
+            super(handler.getLooper());
+            ViewConfiguration viewConfiguration = ViewConfiguration.get(getContext());
+            int touchSlop = viewConfiguration.getScaledTouchSlop();
+            maxTouchSlopSquare = touchSlop * touchSlop;
+            longPressTimeout = viewConfiguration.getLongPressTimeout();
+
+//            LinearLayout selectLayout = (LinearLayout)LayoutInflater.from(getContext()).inflate(R.layout.popup_select_prompter, null);
+//            selectLayout.findViewById(R.id.tv_copy).setOnClickListener(this);
+//            selectLayout.findViewById(R.id.tv_select_all).setOnClickListener(this);
+//            selectLayout.findViewById(R.id.tv_cancel).setOnClickListener(this);
+//            selectPrompter = new PopupWindow(selectLayout,
+//            ViewGroup.LayoutParams.WRAP_CONTENT,
+//            ViewGroup.LayoutParams.WRAP_CONTENT);
+//            TextView tvSelectPrompter = (TextView) View.inflate(getContext(), R.layout.popup_select_prompter, null);
+//            tvSelectPrompter.setOnClickListener(new OnClickListener() {
+//                @Override
+//                public void onClick(View v) {
+//                    if (!TextUtils.isEmpty(selectedText)) {
+//                        inLongPress = false;
+//                        copyPrompter.dismiss();
+//                        tvPassageContent.getEditableText().removeSpan(colorSpan);
+//                        ClipboardManager clipboardManager = (ClipboardManager)getContext().getSystemService(Context.CLIPBOARD_SERVICE);
+//                        clipboardManager.setPrimaryClip(ClipData.newPlainText(null, selectedText));
+//                    }
+//                }
+//            });
+//            copyPrompter = new PopupWindow(tvSelectPrompter,
+//                    ViewGroup.LayoutParams.WRAP_CONTENT,
+//                    ViewGroup.LayoutParams.WRAP_CONTENT);
+//            copyPrompter.setFocusable(true);
+        }
+
+        public void setTextIsSelectable(boolean textIsSelectable) {
+            this.textIsSelectable = textIsSelectable;
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            if (msg.what == LONG_PRESS) {
+                inLongPress = true;
+                textIsSelectable = true;
+                //selectPrompter.showAtLocation(svPassageCarrier, Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 0);
+                //tvPassageContent.setTextIsSelectable(true);
+                tvPassageContent.setTextIsSelectable(true);
+                tvPassageContent.performLongClick();
+                //Prompter.show("onLongClick");
+            } else if (msg.what == SELECT_FINISH) {
+                tvPassageContent.setTextIsSelectable(false);
+                inLongPress = false;
+            }
+            super.handleMessage(msg);
+        }
+
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+//            if (inLongPress)
+//                return onTouchInLongPress(event);
+            if (inLongPress)
+                return false;
+
+            switch (event.getActionMasked()) {
+                case MotionEvent.ACTION_DOWN: {
+                    downX = event.getX();
+                    downY = event.getY();
+                    inLongPressRegion = true;
+                    removeMessages(LONG_PRESS);
+                    sendEmptyMessageDelayed(LONG_PRESS, longPressTimeout);
+                } break;
+                case MotionEvent.ACTION_MOVE: {
+                    if (inLongPressRegion) {
+                        if (!isInLongPressRegion(event.getY() - downY, event.getX() - downX)) {
+                            inLongPressRegion = false;
+                            removeMessages(LONG_PRESS);
+                        }
+                    }
+                } break;
+                case MotionEvent.ACTION_UP: {
+//                    if (inLongPress) {
+//                        inLongPress = false;
+//                        break;
+//                    }
+                    if (inLongPressRegion) {
+                        removeMessages(LONG_PRESS);
+                    }
+                    float deltaX = event.getX() - downX;
+                    float absDeltaY = Math.abs(event.getY() - downY);
+                    float absDeltaX = Math.abs(deltaX);
+                    if (isInClickRegion(absDeltaX, absDeltaY)) {
+                        char c = getClickChineseCharacter(downX, downY);
+                        if (c == 0) {
+                            enableFullscreen(rgContentPanel.getVisibility() == VISIBLE);
+                        } else {
+                            Prompter.show(String.valueOf(c));
+                        }
+                        return true;
+                    }
+                    if (enableSlideSwitch && absDeltaX > SLIDE_SWITCH_THRESHOLD) {
+                        if (deltaX > absDeltaY) {
+                            showPrev();
+                            return true;
+                        } else if (-deltaX > absDeltaY) {
+                            showNext();
+                            return true;
+                        }
+                    }
+                } break;
+            }
+            return false;
+        }
+
+//        boolean onTouchInLongPress(MotionEvent event) {
+//            int action = event.getActionMasked();
+//            switch (action) {
+//                case MotionEvent.ACTION_DOWN: {
+//                    start = getSelectOffset(event.getX(), event.getY());
+//                } break;
+//                case MotionEvent.ACTION_MOVE:
+//                case MotionEvent.ACTION_UP: {
+//                    if (start == -1)
+//                        break;
+//                    float x = event.getX();
+//                    float y = event.getY();
+//                    int end = getSelectOffset(x, y);
+//                    if (start == end) {
+//                        if (action == MotionEvent.ACTION_UP) {
+//                            start = -1;
+//                        }
+//                    } else {
+//                        if (start > end) {
+//                            int tmp = start;
+//                            start = end;
+//                            end = tmp;
+//                        }
+//                        Editable editable = tvPassageContent.getEditableText();
+//                        editable.setSpan(colorSpan, start, end, Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
+//                        if (action == MotionEvent.ACTION_UP) {
+//                            selectedText = editable.subSequence(start, end).toString();
+//                            start = -1;
+//                            //copyPrompter.showAtLocation(svPassageCarrier, Gravity.NO_GRAVITY, (int)x, (int)y);
+//                        }
+//                    }
+//                } break;
+//            }
+//            return true;
+//        }
+
+        boolean isInLongPressRegion(float deltaX, float deltaY) {
+            return deltaX * deltaX + deltaY * deltaY < maxTouchSlopSquare;
+        }
+
+        boolean isInClickRegion(float absDeltaX, float absDeltaY) {
+            return absDeltaY < CLICK_THRESHOLD && absDeltaX < CLICK_THRESHOLD;
+        }
+
+        char getClickChineseCharacter(float x, float y) {
+            int vertical = getRealVertical(y);
+            if (vertical <= 0)
+                return 0;
+            Layout layout = tvPassageContent.getLayout();
+            int line = layout.getLineForVertical(vertical);
+            int position = layout.getOffsetForHorizontal(line, x) - 1;
+            CharSequence cs = tvPassageContent.getText();
+            if (position < 0 || position >= cs.length())
+                return 0;
+            char result = cs.charAt(position);
+            if (!isChineseCharacter(result))
+                return 0;
+            if (layout.getLineVisibleEnd(line) - 1 == position &&
+                    layout.getPrimaryHorizontal(position + 1) * 2 - layout.getPrimaryHorizontal(position) < x)
+                return 0;
+            return result;
+        }
+
+        boolean isChineseCharacter(char c) {
+            return (c >= '\u4e00' && c <= '\u9fa5') ||
+                    (c >= '\uf900' && c <= '\ufa2d');
+        }
+
+        int getSelectOffset(float x, float y) {
+            Layout layout = tvPassageContent.getLayout();
+            int line = layout.getLineForVertical(getRealVertical(y));
+            return layout.getOffsetForHorizontal(line, x);
+        }
+
+        int getRealVertical(float y) {
+            return svPassageCarrier.getScrollY() + (int)y - tvPassageTitle.getBottom();
+        }
+
+        public void setInLongPress(boolean inLongPress) {
+            this.inLongPress = inLongPress;
+        }
+
+        public void finishSelectMode() {
+            sendEmptyMessage(SELECT_FINISH);
+        }
+
+//        @Override
+//        public void onClick(View v) {
+//            int id = v.getId();
+//            if (id == R.id.tv_copy || id == R.id.tv_cancel) {
+//                if (id == R.id.tv_copy && !TextUtils.isEmpty(selectedText)) {
+//                    ClipboardManager clipboardManager = (ClipboardManager)getContext().getSystemService(Context.CLIPBOARD_SERVICE);
+//                    clipboardManager.setPrimaryClip(ClipData.newPlainText(null, selectedText));
+//                }
+//                inLongPress = false;
+//                selectPrompter.dismiss();
+//                tvPassageContent.getEditableText().removeSpan(colorSpan);
+//            } else if (id == R.id.tv_select_all) {
+//                Editable editable = tvPassageContent.getEditableText();
+//                if (editable.length() > 0) {
+//                    editable.setSpan(colorSpan, 0, editable.length(), Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
+//                }
+//            }
+//        }
+    };
 
     private class ScrollPositionKeeper implements Runnable {
 

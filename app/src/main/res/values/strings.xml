@@ -5,6 +5,8 @@
     <string name="chapter">章</string>
     <string name="passage">节</string>
     <string name="memory_pattern">记忆模式</string>
+    <string name="text_copy">复制</string>
+    <string name="text_select_all">全选</string>
     <!-- 相当于记忆时间间隔 -->
     <string name="memory_cycle">记忆周期(天数)</string>
     <string name="ok">确定</string>

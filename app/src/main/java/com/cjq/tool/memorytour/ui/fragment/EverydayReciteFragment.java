@@ -15,7 +15,6 @@ import com.cjq.tool.memorytour.ui.dialog.ReciteTestDialog;
 import com.cjq.tool.memorytour.ui.layout.PassageView;
 import com.cjq.tool.memorytour.ui.toast.Prompter;
 
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -42,6 +41,7 @@ public class EverydayReciteFragment extends BaseFragment {
     private View.OnClickListener onReciteTestClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
+            pvEverydayRecite.clear();
             reciteTestDialog.show(getFragmentManager(), everydayReciteAdapter.currPassage());
         }
     };
@@ -55,7 +55,7 @@ public class EverydayReciteFragment extends BaseFragment {
         @Override
         public boolean onNextPassage(boolean remembered) {
             //清空当前显示
-            pvEverydayRecite.empty();
+            pvEverydayRecite.clear();
             //新加该章节历史记录
             //修改该章节预期记忆
             FinishDailyMissionTask task = new FinishDailyMissionTask();
