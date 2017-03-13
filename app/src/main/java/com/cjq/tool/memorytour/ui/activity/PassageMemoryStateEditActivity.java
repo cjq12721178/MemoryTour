@@ -24,7 +24,7 @@ import com.cjq.tool.memorytour.util.Logger;
 import java.util.Arrays;
 import java.util.List;
 
-public class NewMissionEditActivity extends AppCompatActivity {
+public class PassageMemoryStateEditActivity extends AppCompatActivity {
 
     private List<RecitablePassage> recitablePassages;
     private SectionToReciteAdapter<RecitableBook> bookAdapter;

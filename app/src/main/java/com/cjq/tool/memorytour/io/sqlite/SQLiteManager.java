@@ -19,6 +19,7 @@ import com.cjq.tool.memorytour.bean.Section;
 import com.cjq.tool.memorytour.bean.RecitableBook;
 import com.cjq.tool.memorytour.bean.RecitableChapter;
 import com.cjq.tool.memorytour.bean.RecitablePassage;
+import com.cjq.tool.memorytour.bean.UserInfo;
 import com.cjq.tool.memorytour.util.Logger;
 
 import java.util.List;
@@ -29,7 +30,9 @@ import java.util.List;
 public class SQLiteManager {
 
     private static final String DATABASE_NAME = "MemoryStorage.db";
-    private static final int DATABASE_VERSION_NO = 1;
+    private static final int VN_QQ = 1;
+    private static final int VN_LONG = 2;
+    private static final int CURRENT_VERSION_NO = VN_QQ;
     private static SQLiteLauncher launcher;
     private static SQLiteDatabase database;
     private static StringBuffer buffer = new StringBuffer();
@@ -45,7 +48,7 @@ public class SQLiteManager {
             return false;
         try {
             if (launcher == null) {
-                launcher = new SQLiteLauncher(context, DATABASE_NAME, DATABASE_VERSION_NO);
+                launcher = new SQLiteLauncher(context, DATABASE_NAME, CURRENT_VERSION_NO);
             }
             database = launcher.getWritableDatabase();
         } catch (Exception e) {
@@ -258,15 +261,11 @@ public class SQLiteManager {
             return false;
         database.beginTransaction();
         try {
-            //contentValues.clear();
             for (RecitablePassage passage :
                     passages) {
                 if (passage.isEnableRecite() && passage.isRecitable()) {
                     if (!updateMemoryState(passage, passage.getRecitableMemoryState()))
                         return false;
-//                    contentValues.put(RecitablePassage.MEMORY_STATE, passage.getRecitableMemoryState().ordinal());
-//                    if (database.update(passage.getTable(), contentValues, getWhereStatementAsId(RecitablePassage.ID, passage.getId()), null) == 0)
-//                        return false;
                 }
             }
             database.setTransactionSuccessful();
@@ -354,11 +353,6 @@ public class SQLiteManager {
                 if (!updateMemoryExpectation(nextExpect, passage.getId()))
                     return false;
             }
-            //判断customName是否有变化，若有，修改该passage的customName
-//            if (!TextUtils.equals(passage.getCustomName(), newCustomName)) {
-//                if (!updateMemorySetting(passage, newCustomName, null))
-//                    return false;
-//            }
             database.setTransactionSuccessful();
             return true;
         } catch (Exception e) {
@@ -448,6 +442,88 @@ public class SQLiteManager {
         return null;
     }
 
+    public static UserInfoProvider buildUserInfoProvider() {
+        return new UserInfoProvider();
+    }
+
+    public static class UserInfoProvider extends UserInfo.Provider {
+
+        private static final String PASSAGE_COUNT = "passage_count";
+
+        @Override
+        public boolean isPrepared() {
+            return database != null;
+        }
+
+        @Override
+        public int getIntradayNeedReviewPassageCount() {
+            buffer.setLength(0);
+            buffer.append("SELECT COUNT(*) AS ")
+                    .append(PASSAGE_COUNT)
+                    .append(" FROM ")
+                    .append(ExpectRecord.EXPECT)
+                    .append(" WHERE ")
+                    .append(ExpectRecord.MEMORY_DATE)
+                    .append('<')
+                    .append(System.currentTimeMillis());
+            Cursor cursor = database.rawQuery(buffer.toString(), null);
+            cursor.moveToNext();
+            return cursor.getInt(cursor.getColumnIndex(PASSAGE_COUNT));
+        }
+
+        @Override
+        public int getTotalReviewingPassageCount() {
+            buffer.setLength(0);
+            buffer.append("SELECT COUNT(*) AS ")
+                    .append(PASSAGE_COUNT)
+                    .append(" FROM ")
+                    .append(Passage.PASSAGE)
+                    .append(" WHERE ")
+                    .append(Passage.MEMORY_STATE)
+                    .append('=')
+                    .append(MemoryState.RECITING.ordinal())
+                    .append(" OR ")
+                    .append(Passage.MEMORY_STATE)
+                    .append('=')
+                    .append(MemoryState.REPEAT_RECITE.ordinal());
+            Cursor cursor = database.rawQuery(buffer.toString(), null);
+            cursor.moveToNext();
+            return cursor.getInt(cursor.getColumnIndex(PASSAGE_COUNT));
+        }
+
+        @Override
+        public int getTotalNotRecitePassageCount() {
+            buffer.setLength(0);
+            buffer.append("SELECT COUNT(*) AS ")
+                    .append(PASSAGE_COUNT)
+                    .append(" FROM ")
+                    .append(Passage.PASSAGE)
+                    .append(" WHERE ")
+                    .append(Passage.MEMORY_STATE)
+                    .append('=')
+                    .append(MemoryState.NOT_RECITE.ordinal());
+            Cursor cursor = database.rawQuery(buffer.toString(), null);
+            cursor.moveToNext();
+            return cursor.getInt(cursor.getColumnIndex(PASSAGE_COUNT));
+        }
+
+        @Override
+        public int getTotalRecitedPassageCount() {
+            buffer.setLength(0);
+            buffer.append("SELECT COUNT(*) AS ")
+                    .append(PASSAGE_COUNT)
+                    .append(" FROM ")
+                    .append(Passage.PASSAGE)
+                    .append(" WHERE ")
+                    .append(Passage.MEMORY_STATE)
+                    .append('=')
+                    .append(MemoryState.RECITED.ordinal());
+            Cursor cursor = database.rawQuery(buffer.toString(), null);
+            cursor.moveToNext();
+            return cursor.getInt(cursor.getColumnIndex(PASSAGE_COUNT));
+        }
+    }
+
     private static class SQLiteLauncher extends SQLiteOpenHelper {
 
         private StringBuilder sqlBuilder = new StringBuilder(256);
@@ -472,7 +548,8 @@ public class SQLiteManager {
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-
+//            if (oldVersion < VN_LONG && newVersion >= VN_LONG) {
+//            }
         }
 
         private String getBookTable() {

@@ -1,4 +1,4 @@
-package com.cjq.tool.memorytour.ui.fragment;
+package com.cjq.tool.memorytour.ui.activity;
 
 import android.app.Activity;
 import android.content.Context;
@@ -6,12 +6,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
-import android.view.LayoutInflater;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.TextView;
 
@@ -21,8 +19,8 @@ import com.cjq.tool.memorytour.bean.Chapter;
 import com.cjq.tool.memorytour.bean.Passage;
 import com.cjq.tool.memorytour.exception.ImportSectionException;
 import com.cjq.tool.memorytour.io.sqlite.SQLiteManager;
-import com.cjq.tool.memorytour.ui.activity.PassageMemoryStateEditActivity;
 import com.cjq.tool.memorytour.ui.dialog.LoadingDialog;
+import com.cjq.tool.memorytour.ui.toast.Prompter;
 import com.cjq.tool.memorytour.util.Logger;
 import com.cjq.tool.memorytour.util.Tag;
 
@@ -36,10 +34,7 @@ import java.util.Map;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
-/**
- * Created by KAT on 2016/8/26.
- */
-public class SpecialFunctionFragment extends BaseFragment {
+public class PassageSettingActivity extends AppCompatActivity {
 
     private static final int REQUEST_CODE_FILE_SELECT = 1;
     private static final String CONFIG_FILE_NAME = "config";
@@ -49,10 +44,35 @@ public class SpecialFunctionFragment extends BaseFragment {
     private CheckBox chkCurrentSections;
     private LoadingDialog loadingDialog = new LoadingDialog();
 
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_passage_setting);
+
+        SharedPreferences config = getSharedPreferences(CONFIG_FILE_NAME, Context.MODE_PRIVATE);
+        chkBooks = setSectionImportView(findViewById(R.id.il_books_import),
+                R.string.tv_import_books_label,
+                config,
+                Tag.SP_BOOK_PATH,
+                R.string.tv_import_books_path);
+        chkChapters = setSectionImportView(findViewById(R.id.il_chapters_import),
+                R.string.tv_import_chapters_label,
+                config,
+                Tag.SP_CHAPTER_PATH,
+                R.string.tv_import_chapters_path);
+        chkPassages = setSectionImportView(findViewById(R.id.il_passages_import),
+                R.string.tv_import_passages_label,
+                config,
+                Tag.SP_PASSAGE_PATH,
+                R.string.tv_import_passages_path);
+        findViewById(R.id.btn_section_save).setOnClickListener(onMoveSectionToDatabaseListener);
+        findViewById(R.id.btn_add_to_recite).setOnClickListener(onAddToReciteListener);
+    }
+
     private View.OnClickListener onAddToReciteListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            Intent intent = new Intent(getContext(), PassageMemoryStateEditActivity.class);
+            Intent intent = new Intent(PassageSettingActivity.this, PassageMemoryStateEditActivity.class);
             startActivity(intent);
         }
     };
@@ -68,7 +88,7 @@ public class SpecialFunctionFragment extends BaseFragment {
             try {
                 startActivityForResult(Intent.createChooser(intent, getString(R.string.el_import_title)), REQUEST_CODE_FILE_SELECT);
             } catch (android.content.ActivityNotFoundException ex) {
-                promptMessage(R.string.ppt_file_manager_not_installed);
+                Prompter.show(R.string.ppt_file_manager_not_installed);
             }
             return true;
         }
@@ -83,7 +103,7 @@ public class SpecialFunctionFragment extends BaseFragment {
             if (chkCurrentSections != null &&
                     !chkCurrentSections.getText().toString().equals(filePath)) {
                 chkCurrentSections.setText(filePath);
-                getContext().getSharedPreferences(CONFIG_FILE_NAME, Context.MODE_PRIVATE)
+                getSharedPreferences(CONFIG_FILE_NAME, Context.MODE_PRIVATE)
                         .edit()
                         .putString(chkCurrentSections.getTag().toString(), filePath)
                         .commit();
@@ -99,7 +119,7 @@ public class SpecialFunctionFragment extends BaseFragment {
             if (!chkBooks.isChecked() &&
                     !chkChapters.isChecked() &&
                     !chkPassages.isChecked()) {
-                promptMessage(R.string.ppt_enable_import_section);
+                Prompter.show(R.string.ppt_enable_import_section);
                 return;
             }
 
@@ -109,31 +129,6 @@ public class SpecialFunctionFragment extends BaseFragment {
                     chkPassages.isChecked() ? chkPassages.getText().toString() : null);
         }
     };
-
-    @Nullable
-    @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_special_function, null);
-        SharedPreferences config = inflater.getContext().getSharedPreferences(CONFIG_FILE_NAME, Context.MODE_PRIVATE);
-        chkBooks = setSectionImportView(view.findViewById(R.id.il_books_import),
-                R.string.tv_import_books_label,
-                config,
-                Tag.SP_BOOK_PATH,
-                R.string.tv_import_books_path);
-        chkChapters = setSectionImportView(view.findViewById(R.id.il_chapters_import),
-                R.string.tv_import_chapters_label,
-                config,
-                Tag.SP_CHAPTER_PATH,
-                R.string.tv_import_chapters_path);
-        chkPassages = setSectionImportView(view.findViewById(R.id.il_passages_import),
-                R.string.tv_import_passages_label,
-                config,
-                Tag.SP_PASSAGE_PATH,
-                R.string.tv_import_passages_path);
-        view.findViewById(R.id.btn_section_save).setOnClickListener(onMoveSectionToDatabaseListener);
-        view.findViewById(R.id.btn_add_to_recite).setOnClickListener(onAddToReciteListener);
-        return view;
-    }
 
     private CheckBox setSectionImportView(View ilImportGroup,
                                           @StringRes int labelResId,
@@ -161,7 +156,7 @@ public class SpecialFunctionFragment extends BaseFragment {
         @Override
         protected void onPreExecute() {
             errorInfo = null;
-            loadingDialog.show(getFragmentManager(), getString(R.string.ppt_saving_section));
+            loadingDialog.show(getSupportFragmentManager(), getString(R.string.ppt_saving_section));
         }
 
         @Override
@@ -170,7 +165,7 @@ public class SpecialFunctionFragment extends BaseFragment {
             if (errorInfo == null) {
                 errorInfo = getString(R.string.btn_insert_section) + (moveResult ? "成功" : "失败");
             }
-            promptMessage(errorInfo);
+            Prompter.show(errorInfo);
         }
 
         @Override

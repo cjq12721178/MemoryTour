@@ -7,12 +7,30 @@
     <string name="memory_pattern">记忆模式</string>
     <string name="text_copy">复制</string>
     <string name="text_select_all">全选</string>
+    <string name="setting">设置</string>
     <!-- 相当于记忆时间间隔 -->
     <string name="memory_cycle">记忆周期(天数)</string>
     <string name="ok">确定</string>
     <string name="cancel">取消</string>
 
     <!-- 界面控件显示用语 -->
+    <!-- 记忆信息展示面板 -->
+    <string name="tv_reciting_book" formatted="false">当前记忆书目：%s</string>
+    <string name="tv_intraday_reciting" formatted="false">今日需学习：%d/%d</string>
+    <string name="tv_intraday_reviewing" formatted="false">今日需复习：%d/%d</string>
+    <string name="tv_intraday_review_recite" formatted="false">今日需复习/学习：%d/%d</string>
+    <string name="tv_total_reviewing" formatted="false">将来需复习：%d</string>
+    <string name="tv_total_not_recite" formatted="false">尚未学习：%d</string>
+    <string name="tv_total_recited" formatted="false">已经完成：%d</string>
+    <string name="btn_start_memory_tour">开启记忆之旅</string>
+    <string name="tv_library">守藏室</string>
+    <!-- 复习/学习界面 -->
+    <string name="ppt_no_reviewing_passage">今日没有章节需要复习</string>
+    <string name="ppt_intraday_passages_completed">今日复习和学习任务均已完成</string>
+    <string name="ppt_intraday_passages_reviewed">今日复习任务已完成</string>
+    <string name="ppt_intraday_passages_recited">今日学习任务已完成</string>
+    <string name="ppt_no_not_to_recite_passages">当前记忆候选库为空，可在“奇技淫巧”中修改待记忆章节库</string>
+
     <!-- 功能切换面板 -->
     <string name="tv_everyday_recite">回梦仙游</string>
     <string name="tv_new_mission">开疆拓土</string>
@@ -63,6 +81,7 @@
     <!-- MainActivity -->
     <string name="ppt_database_open_failed">本地数据库开启失败</string>
     <string name="ppt_exit_app">再按一次离开记忆之旅</string>
+    <string name="ppt_import_user_info_failed">导入用户记忆信息失败</string>
     <!-- BaseFragment -->
     <string name="ppt_experience_update_failed">体会更新失败</string>
     <!-- 新任务界面 -->
@@ -99,7 +118,7 @@
     <string name="ppt_custom_name_modify_failed">自定义名称修改失败</string>
     <string name="ppt_daily_missions_load_failed">日常任务导入失败</string>
     <string name="ppt_part_mission_load_failed">部分任务载入失败</string>
-    <string name="ppt_no_daily_missions">今日没有记忆任务</string>
+    <string name="ppt_no_daily_missions">今日没有章节需要复习</string>
     <string name="ppt_daily_missions_completed">今日记忆任务全部完成</string>
     <!-- 记忆测试界面 -->
     <string name="ppt_title_modify_custom_name">修改自定义名称</string>

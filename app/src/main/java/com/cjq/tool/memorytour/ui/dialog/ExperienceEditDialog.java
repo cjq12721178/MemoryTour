@@ -28,7 +28,7 @@ public class ExperienceEditDialog extends BaseDialog {
     }
 
     public interface OnSetExperienceListener {
-        void onSetExperience(String newExperience, boolean addOrModify);
+        void onSetExperience(String experience, boolean addOrModify);
     }
 
     private CompoundButton.OnCheckedChangeListener onExperienceSetModeChangedListener = new CompoundButton.OnCheckedChangeListener() {

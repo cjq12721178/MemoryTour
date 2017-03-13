@@ -21,7 +21,7 @@ import com.cjq.tool.memorytour.util.TimeFormatter;
 public class ReciteTestDialog extends BaseDialog {
 
     public interface OnTestEventListener {
-        void onCheckSourceText();
+        void onCheckOriginText();
         //返回true关闭对话框，false不关闭
         boolean onNextPassage(boolean remembered);
         //在执行完耗时任务后，记得调用enableModifyCustomName使自定义名称修改功能重新启用
@@ -133,7 +133,7 @@ public class ReciteTestDialog extends BaseDialog {
     @Override
     protected boolean onOkClick() {
         if (onTestEventListener != null) {
-            onTestEventListener.onCheckSourceText();
+            onTestEventListener.onCheckOriginText();
         }
         return true;
     }

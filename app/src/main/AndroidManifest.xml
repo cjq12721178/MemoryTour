@@ -18,7 +18,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.activity.NewMissionEditActivity"></activity>
+        <activity android:name=".ui.activity.PassageMemoryStateEditActivity" />
+        <activity android:name=".ui.activity.PassageReviewStudyActivity" />
+        <activity android:name=".ui.activity.PassageSettingActivity"></activity>
     </application>
 
 </manifest>

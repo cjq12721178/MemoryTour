@@ -1,23 +1,22 @@
-package com.cjq.tool.memorytour.ui.layout;
+package com.cjq.tool.memorytour.ui.activity;
 
-import android.content.Context;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
+import android.support.annotation.DrawableRes;
 import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
-import android.support.v4.app.FragmentManager;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
 import android.text.Layout;
 import android.text.TextUtils;
-import android.util.AttributeSet;
 import android.view.ActionMode;
 import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
-import android.view.ViewStub;
 import android.widget.ImageButton;
 import android.widget.RadioGroup;
 import android.widget.RelativeLayout;
@@ -26,102 +25,84 @@ import android.widget.TextView;
 
 import com.cjq.tool.memorytour.R;
 import com.cjq.tool.memorytour.bean.Passage;
+import com.cjq.tool.memorytour.bean.UserInfo;
+import com.cjq.tool.memorytour.io.sqlite.SQLiteManager;
 import com.cjq.tool.memorytour.ui.dialog.ExperienceEditDialog;
 import com.cjq.tool.memorytour.ui.dialog.HistoryRecordDialog;
+import com.cjq.tool.memorytour.ui.dialog.ReciteTestDialog;
 import com.cjq.tool.memorytour.ui.toast.Prompter;
 import com.cjq.tool.memorytour.util.Converter;
 import com.cjq.tool.memorytour.util.Logger;
 
-/**
- * Created by KAT on 2016/10/17.
- */
-public class PassageView extends RelativeLayout {
+public abstract class PassageBaseActivity extends AppCompatActivity {
 
-    public interface OnEnableFullscreenListener {
-        void onEnableFullScreen(boolean enable);
-    }
-
-    public interface OnPassageShowListener {
-        void onShowPrev(Passage passage);
-        void onShowNext(Passage passage);
-    }
-
-    public interface OnExperienceChangedListener {
-        void onExperienceChanged(PassageView passageView, Passage passage, String newExperience);
-    }
-
+    protected static final int SELECT_PASSAGE_COUNT = 3;
     private TextView tvPassageTitle;
     private TextView tvPassageContent;
+    private TextView tvPromptInformation;
+    private RelativeLayout rlPassageAuxiliary;
     private RadioGroup rgContentPanel;
     private ScrollView svPassageCarrier;
     private ImageButton ibSetExperience;
     private ImageButton ibHistoryRecord;
-    private Adapter adapter;
+    private ImageButton ibAuxiliaryFunction;
     private TouchHandler touchHandler;
-    private OnPassageShowListener onPassageShowListener;
-    private boolean enableSlideSwitch = false;
-    private OnEnableFullscreenListener onEnableFullscreenListener;
-    private FragmentManager fragmentManager;
     private ExperienceEditDialog experienceEditDialog;
-    private OnExperienceChangedListener onExperienceChangedListener;
     private HistoryRecordDialog historyRecordDialog;
+    private boolean enableSlideSwitch = false;
+    private boolean isFullScreen = false;
+    private int currentPassageIndex = -1;
     private int prevPassageId;
     private int prevCheckedPanelId;
-    private ContentBuilder[] contentBuilders;
-    //private Handler handler;
+    private static ContentBuilder[] contentBuilders;
     private ScrollPositionKeeper scrollPositionKeeper = new ScrollPositionKeeper();
 
-//    private View.OnClickListener onFunctionPanelClickListener = new OnClickListener() {
-//        @Override
-//        public void onClick(View v) {
-//            final Passage passage = adapter.currPassage();
-//            if (passage == null) {
-//                Prompter.show(R.string.ppt_passage_content_null);
-//            } else {
-//                if (fragmentManager != null) {
-//                    switch (v.getId()) {
-//                        case R.id.ib_set_experience:onExperienceEditorClick(passage);break;
-//                        case R.id.ib_history_record:onHistoryRecordViewerClick(passage);break;
-//                        default:
-//                            Logger.record("未点中任何功能按钮");break;
-//                    }
-//                }
-//            }
-//        }
-//
-//        private void onExperienceEditorClick(final Passage passage) {
-//            if (experienceEditDialog == null) {
-//                experienceEditDialog = new ExperienceEditDialog();
-//                experienceEditDialog.setOnSetExperienceListener(new ExperienceEditDialog.OnSetExperienceListener() {
-//                    @Override
-//                    public void onSetExperience(String newExperience, boolean addOrModify) {
-//                        if (onExperienceChangedListener != null) {
-//                            onExperienceChangedListener.onExperienceChanged(PassageView.this,
-//                                    passage, getNewExperience(passage, formatExperience(newExperience), addOrModify));
-//                        }
-//                    }
-//                });
-//            }
-//            experienceEditDialog.show(fragmentManager, passage.getExperience());
-//        }
-//
-//        private void onHistoryRecordViewerClick(Passage passage) {
-//            historyRecordDialog.show(fragmentManager, passage.getHistoryRecords());
-//        }
-//    };
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_passage_base);
 
+        touchHandler = new TouchHandler();
+        initContentBuilder();
+        rlPassageAuxiliary = (RelativeLayout)findViewById(R.id.rl_passage_auxiliary);
+        rgContentPanel = (RadioGroup)findViewById(R.id.rdo_grp_content_panel);
+        rgContentPanel.setOnCheckedChangeListener(touchHandler);
+        tvPromptInformation = (TextView)findViewById(R.id.tv_memory_situation);
+        svPassageCarrier = (ScrollView)findViewById(R.id.sv_passage_carrier);
+        svPassageCarrier.setOnTouchListener(touchHandler);
+        tvPassageTitle = (TextView)findViewById(R.id.tv_passage_header);
+        tvPassageContent = (TextView)findViewById(R.id.tv_passage_content);
+        tvPassageContent.setCustomSelectionActionModeCallback(touchHandler);
+        ibSetExperience = (ImageButton)findViewById(R.id.ib_set_experience);
+        ibSetExperience.setOnClickListener(touchHandler);
+        ibHistoryRecord = (ImageButton)findViewById(R.id.ib_history_record);
+        ibHistoryRecord.setOnClickListener(touchHandler);
+        ibAuxiliaryFunction = (ImageButton)findViewById(R.id.ib_auxiliary_function);
+        ibAuxiliaryFunction.setOnClickListener(touchHandler);
+    }
 
+    protected void setPromptInformation(String info) {
+        if (!TextUtils.equals(tvPromptInformation.getText(), info)) {
+            tvPromptInformation.setText(info);
+            tvPromptInformation.setVisibility(TextUtils.isEmpty(info) ? View.GONE : View.VISIBLE);
+        }
+    }
 
-//    private RadioGroup.OnCheckedChangeListener onCheckedChangeListener = new RadioGroup.OnCheckedChangeListener() {
-//        @Override
-//        public void onCheckedChanged(RadioGroup group, int checkedId) {
-//            changeContent(adapter.currPassage(), checkedId);
-//        }
-//    };
+    protected void setAuxiliaryFunctionImageResource(@DrawableRes int backgroundId) {
+        ibAuxiliaryFunction.setImageResource(backgroundId);
+    }
+
+    protected void setAuxiliaryFunctionEnable(boolean enabled) {
+        ibAuxiliaryFunction.setEnabled(enabled);
+    }
+
+    protected void setAuxiliaryFunctionVisibility(int visibility) {
+        ibAuxiliaryFunction.setVisibility(visibility);
+    }
 
     private void changeContent(Passage passage, @IdRes int checkedPanelId) {
         if (passage == null) {
-            tvPassageContent.setText(getContext().getString(R.string.ppt_passage_content_null));
+            tvPassageContent.setText(getString(R.string.ppt_passage_content_null));
             tvPassageContent.setGravity(Gravity.CENTER);
         } else {
             //记录滚动位置
@@ -144,32 +125,6 @@ public class PassageView extends RelativeLayout {
             }
             prevPassageId = currPassageId;
         }
-    }
-
-    public PassageView(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        //handler = new Handler();
-        touchHandler = new TouchHandler();
-        initContentBuilder(context);
-        View view = LayoutInflater.from(context).inflate(R.layout.group_passage_view, this);
-        rgContentPanel = (RadioGroup)view.findViewById(R.id.rdo_grp_content_panel);
-        rgContentPanel.setOnCheckedChangeListener(touchHandler);
-        svPassageCarrier = (ScrollView)view.findViewById(R.id.sv_passage_carrier);
-        svPassageCarrier.setOnTouchListener(touchHandler);
-        tvPassageTitle = (TextView)view.findViewById(R.id.tv_passage_header);
-        tvPassageContent = (TextView)view.findViewById(R.id.tv_passage_content);
-        tvPassageContent.setCustomSelectionActionModeCallback(touchHandler);
-        adapter = emptyAdapter;
-        setExperienceEditor();
-    }
-
-    public void setOnPassageShowListener(OnPassageShowListener l) {
-        this.onPassageShowListener = l;
-    }
-
-    private void setExperienceEditor() {
-        ibSetExperience = (ImageButton)findViewById(R.id.ib_set_experience);
-        ibSetExperience.setOnClickListener(touchHandler);
     }
 
     private String getNewExperience(Passage passage, String newExperience, boolean addOrModify) {
@@ -206,19 +161,6 @@ public class PassageView extends RelativeLayout {
         return builder.toString();
     }
 
-    public void setFunctionBox(FragmentManager fragmentManager,
-                               OnExperienceChangedListener l,
-                               boolean startHistoryRecordViewer) {
-        this.fragmentManager = fragmentManager;
-        onExperienceChangedListener = l;
-        if (startHistoryRecordViewer && ibHistoryRecord == null) {
-            ViewStub vsHistoryRecord = (ViewStub) findViewById(R.id.vs_history_record);
-            ibHistoryRecord = (ImageButton)vsHistoryRecord.inflate();
-            ibHistoryRecord.setOnClickListener(touchHandler);
-            historyRecordDialog = new HistoryRecordDialog();
-        }
-    }
-
     private int getCurrentBrowsePosition() {
         return svPassageCarrier.getScrollY();
     }
@@ -242,40 +184,41 @@ public class PassageView extends RelativeLayout {
 
     //注意，该方法只能在当前章节的各个部分进行切换
     public void showContent(@IdRes int content) {
-        showContent(adapter.currPassage(), content);
+        showContent(getCurrentPassage(), content);
     }
 
-    public void showCurr() {
-        Passage passage = adapter.currPassage();
+    public void showCurrentPassage() {
+        Passage passage = getCurrentPassage();
         if (passage == null) {
             Prompter.show(R.string.ppt_current_passage_empty);
             return;
         }
         showPassage(passage, R.id.rdo_main_body);
+        onShowCurrentPassage(passage);
     }
 
-    public void showNext() {
-        Passage passage = adapter.nextPassage();
+    public void showNextPassage() {
+        Passage passage = nextPassage();
         if (passage == null) {
             Prompter.show(R.string.ppt_reach_last_passage_default);
             return;
         }
+        //++currentPassageIndex;
+        //setPassageCurrentIndex(currentPassageIndex + 1);
         showPassage(passage, R.id.rdo_main_body);
-        if (onPassageShowListener != null) {
-            onPassageShowListener.onShowNext(passage);
-        }
+        onShowNextPassage(passage);
     }
 
-    public void showPrev() {
-        Passage passage = adapter.prevPassage();
+    public void showPreviousPassage() {
+        Passage passage = previousPassage();
         if (passage == null) {
             Prompter.show(R.string.ppt_reach_first_passage_default);
             return;
         }
+        //--currentPassageIndex;
+        //setPassageCurrentIndex(currentPassageIndex - 1);
         showPassage(passage, R.id.rdo_main_body);
-        if (onPassageShowListener != null) {
-            onPassageShowListener.onShowPrev(passage);
-        }
+        onShowPreviousPassage(passage);
     }
 
     private void setTitle(Passage passage) {
@@ -293,28 +236,19 @@ public class PassageView extends RelativeLayout {
         enableSlideSwitch = enable;
     }
 
-    public void setOnEnableFullscreenListener(OnEnableFullscreenListener l) {
-        onEnableFullscreenListener = l;
-    }
-
-    public void setAdapter(Adapter adapter) {
-        this.adapter = adapter;
-    }
-
-    public void clear() {
-        tvPassageTitle.setText("");
-        tvPassageContent.setText("");
-    }
-
-    private void initContentBuilder(Context context) {
-        contentBuilders = new ContentBuilder[7];
-        contentBuilders[0] = new MainBodyBuilder(context.getString(R.string.ppt_content_null_main_body));
-        contentBuilders[1] = new CommentsBuilder(context.getString(R.string.ppt_content_null_comments));
-        contentBuilders[2] = new TranslationBuilder(context.getString(R.string.ppt_content_null_translation));
-        contentBuilders[3] = new AppreciationBuilder(context.getString(R.string.ppt_content_null_appreciation));
-        contentBuilders[4] = new AuthorIntroductionBuilder(context.getString(R.string.ppt_content_null_appreciation));
-        contentBuilders[5] = new ExperienceBuilder(context.getString(R.string.ppt_content_null_experience));
-        contentBuilders[6] = new NullBuilder(context.getString(R.string.ppt_content_panel_choose_error));
+    private void initContentBuilder() {
+        if (contentBuilders != null) {
+            clearContentBuilderRecord();
+        } else {
+            contentBuilders = new ContentBuilder[7];
+            contentBuilders[0] = new MainBodyBuilder(getString(R.string.ppt_content_null_main_body));
+            contentBuilders[1] = new CommentsBuilder(getString(R.string.ppt_content_null_comments));
+            contentBuilders[2] = new TranslationBuilder(getString(R.string.ppt_content_null_translation));
+            contentBuilders[3] = new AppreciationBuilder(getString(R.string.ppt_content_null_appreciation));
+            contentBuilders[4] = new AuthorIntroductionBuilder(getString(R.string.ppt_content_null_appreciation));
+            contentBuilders[5] = new ExperienceBuilder(getString(R.string.ppt_content_null_experience));
+            contentBuilders[6] = new NullBuilder(getString(R.string.ppt_content_panel_choose_error));
+        }
     }
 
     private ContentBuilder getContentBuilder(@IdRes int checkedPanelId) {
@@ -336,9 +270,108 @@ public class PassageView extends RelativeLayout {
         }
     }
 
+    public void clearPassageView() {
+        tvPassageTitle.setText("");
+        tvPassageContent.setText("");
+    }
+
+    public Passage getPreviousPassage() {
+        return currentPassageIndex <= 0 ?
+                null :
+                getPassage(currentPassageIndex - 1);
+    }
+
+    public Passage getCurrentPassage() {
+        return currentPassageIndex == -1 ?
+                null :
+                getPassage(currentPassageIndex);
+    }
+
+    public Passage getNextPassage() {
+        return currentPassageIndex + 1 >= getPassageCount() ?
+                null :
+                getPassage(currentPassageIndex + 1);
+    }
+
+    public Passage previousPassage() {
+        Passage passage = getPreviousPassage();
+        if (passage != null) {
+            --currentPassageIndex;
+        }
+        return passage;
+    }
+
+    public Passage nextPassage() {
+        Passage passage = getNextPassage();
+        if (passage != null) {
+            ++currentPassageIndex;
+        }
+        return passage;
+    }
+
+    //返回设置后的currentPassageIndex，可以将其与设置值比较判断是否设置成功
+    public int setPassageCurrentIndex(int index) {
+        if (index >= -1 &&
+                index < getPassageCount() &&
+                currentPassageIndex != index) {
+            currentPassageIndex = index;
+        }
+        return currentPassageIndex;
+    }
+
+    protected abstract Passage getPassage(int index);
+
+    protected abstract int getPassageCount();
+
+    protected void onShowNextPassage(Passage passage) {
+
+    }
+
+    protected void onShowCurrentPassage(Passage passage) {
+
+    }
+
+    protected void onShowPreviousPassage(Passage passage) {
+
+    }
+
+    public void performAuxiliaryFunctionClick() {
+        onAuxiliaryFunctionClick(ibAuxiliaryFunction);
+    }
+
+    protected void onAuxiliaryFunctionClick(ImageButton ib) {
+
+    }
+
+    private class ModifyExperienceTask extends AsyncTask<Object, Void, Boolean> {
+
+        private Passage passage;
+        private String experience;
+
+        @Override
+        protected Boolean doInBackground(Object... params) {
+            if (params == null || params.length != 2 ||
+                    !(params[0] instanceof Passage) ||
+                    !(params[1] instanceof String))
+                return null;
+            return SQLiteManager.updateExperience(passage = (Passage)params[0],
+                    experience = (String)params[1]);
+        }
+
+        @Override
+        protected void onPostExecute(Boolean isSuccess) {
+            if (isSuccess) {
+                passage.setExperience(experience);
+                showContent(R.id.rdo_experience);
+            } else {
+                Prompter.show(R.string.ppt_experience_update_failed);
+            }
+        }
+    }
+
     private class TouchHandler
             extends Handler
-            implements OnTouchListener,
+            implements View.OnTouchListener,
             View.OnClickListener,
             RadioGroup.OnCheckedChangeListener,
             ActionMode.Callback {
@@ -356,7 +389,7 @@ public class PassageView extends RelativeLayout {
 
         TouchHandler() {
             super();
-            ViewConfiguration viewConfiguration = ViewConfiguration.get(getContext());
+            ViewConfiguration viewConfiguration = ViewConfiguration.get(PassageBaseActivity.this);
             int touchSlop = viewConfiguration.getScaledTouchSlop();
             maxTouchSlopSquare = touchSlop * touchSlop;
             longPressTimeout = viewConfiguration.getLongPressTimeout();
@@ -411,7 +444,7 @@ public class PassageView extends RelativeLayout {
                     if (isInClickRegion(absDeltaX, absDeltaY)) {
                         char c = getClickChineseCharacter(downX, downY);
                         if (c == 0) {
-                            enableFullscreen(rgContentPanel.getVisibility() == VISIBLE);
+                            enableFullscreen(!isFullScreen);
                         } else {
                             //Prompter.show(String.valueOf(c));
                             //TODO 单击查字
@@ -420,10 +453,10 @@ public class PassageView extends RelativeLayout {
                     }
                     if (enableSlideSwitch && absDeltaX > SLIDE_SWITCH_THRESHOLD) {
                         if (deltaX > absDeltaY) {
-                            showPrev();
+                            showPreviousPassage();
                             return true;
                         } else if (-deltaX > absDeltaY) {
-                            showNext();
+                            showNextPassage();
                             return true;
                         }
                     }
@@ -469,21 +502,13 @@ public class PassageView extends RelativeLayout {
         }
 
         void enableFullscreen(boolean enable) {
+            isFullScreen = enable;
             if (enable) {
-                ibSetExperience.setVisibility(INVISIBLE);
-                if (ibHistoryRecord != null) {
-                    ibHistoryRecord.setVisibility(INVISIBLE);
-                }
-                rgContentPanel.setVisibility(GONE);
+                rlPassageAuxiliary.setVisibility(View.GONE);
+                rgContentPanel.setVisibility(View.GONE);
             } else {
-                ibSetExperience.setVisibility(VISIBLE);
-                if (ibHistoryRecord != null) {
-                    ibHistoryRecord.setVisibility(VISIBLE);
-                }
-                rgContentPanel.setVisibility(VISIBLE);
-            }
-            if (onEnableFullscreenListener != null) {
-                onEnableFullscreenListener.onEnableFullScreen(enable);
+                rlPassageAuxiliary.setVisibility(View.VISIBLE);
+                rgContentPanel.setVisibility(View.VISIBLE);
             }
         }
 
@@ -498,20 +523,21 @@ public class PassageView extends RelativeLayout {
             if (id == R.id.ib_set_experience ||
                     id == R.id.ib_history_record) {
                 onFunctionPanelClick(id);
+            } else if (id == R.id.ib_auxiliary_function) {
+                onAuxiliaryFunctionClick(ibAuxiliaryFunction);
             }
         }
 
         void onFunctionPanelClick(@IdRes int id) {
-            final Passage passage = adapter.currPassage();
+            final Passage passage = getCurrentPassage();
             if (passage == null) {
                 Prompter.show(R.string.ppt_passage_content_null);
             } else {
-                if (fragmentManager != null) {
-                    switch (id) {
-                        case R.id.ib_set_experience:onExperienceEditorClick(passage);break;
-                        case R.id.ib_history_record:onHistoryRecordViewerClick(passage);break;
-                        default:Logger.record("未点中任何功能按钮");break;
-                    }
+                switch (id) {
+                    case R.id.ib_set_experience:onExperienceEditorClick(passage);break;
+                    case R.id.ib_history_record:onHistoryRecordViewerClick(passage);break;
+                    default:
+                        Logger.record("未点中任何功能按钮");break;
                 }
             }
         }
@@ -521,24 +547,28 @@ public class PassageView extends RelativeLayout {
                 experienceEditDialog = new ExperienceEditDialog();
                 experienceEditDialog.setOnSetExperienceListener(new ExperienceEditDialog.OnSetExperienceListener() {
                     @Override
-                    public void onSetExperience(String newExperience, boolean addOrModify) {
-                        if (onExperienceChangedListener != null) {
-                            onExperienceChangedListener.onExperienceChanged(PassageView.this,
-                                    passage, getNewExperience(passage, formatExperience(newExperience), addOrModify));
+                    public void onSetExperience(String experience, boolean addOrModify) {
+                        String newExperience = getNewExperience(passage, formatExperience(experience), addOrModify);
+                        if (!newExperience.equals(passage.getExperience())) {
+                            ModifyExperienceTask task = new ModifyExperienceTask();
+                            task.execute(passage, newExperience);
                         }
                     }
                 });
             }
-            experienceEditDialog.show(fragmentManager, passage.getExperience());
+            experienceEditDialog.show(getSupportFragmentManager(), passage.getExperience());
         }
 
         void onHistoryRecordViewerClick(Passage passage) {
-            historyRecordDialog.show(fragmentManager, passage.getHistoryRecords());
+            if (historyRecordDialog == null) {
+                historyRecordDialog = new HistoryRecordDialog();
+            }
+            historyRecordDialog.show(getSupportFragmentManager(), passage.getHistoryRecords());
         }
 
         @Override
         public void onCheckedChanged(RadioGroup group, int checkedId) {
-            changeContent(adapter.currPassage(), checkedId);
+            changeContent(getCurrentPassage(), checkedId);
         }
 
         @Override
@@ -560,7 +590,7 @@ public class PassageView extends RelativeLayout {
         public void onDestroyActionMode(ActionMode mode) {
             finishSelectMode();
         }
-    };
+    }
 
     private class ScrollPositionKeeper implements Runnable {
 
@@ -576,36 +606,6 @@ public class PassageView extends RelativeLayout {
             setBrowsePosition(position);
         }
     }
-
-    public static abstract class Adapter {
-
-        public abstract Passage currPassage();
-
-        public abstract Passage nextPassage();
-
-        public abstract Passage prevPassage();
-
-        public int getPassageCount() {
-            return 0;
-        }
-    }
-
-    private static Adapter emptyAdapter = new Adapter() {
-        @Override
-        public Passage currPassage() {
-            return null;
-        }
-
-        @Override
-        public Passage nextPassage() {
-            return null;
-        }
-
-        @Override
-        public Passage prevPassage() {
-            return null;
-        }
-    };
 
     private static abstract class ContentBuilder {
 
