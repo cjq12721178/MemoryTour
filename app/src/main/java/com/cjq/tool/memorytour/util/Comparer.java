@@ -18,6 +18,7 @@ public class Comparer {
     }
 
     private static long toDays(long millisecondsWithoutTimeZone) {
-        return TimeUnit.MILLISECONDS.toDays(millisecondsWithoutTimeZone + TimeZone.getDefault().getOffset(millisecondsWithoutTimeZone));
+        return TimeUnit.MILLISECONDS.toDays(millisecondsWithoutTimeZone +
+                TimeZone.getDefault().getOffset(millisecondsWithoutTimeZone));
     }
 }

@@ -73,7 +73,7 @@ public class UserInfo {
         long lastLogInTime = preferences.getLong(LAST_LOG_IN_TIME, 0);
         long currentLogInTime = System.currentTimeMillis();
         SharedPreferences.Editor editor = getEditor();
-        if (Comparer.isSameDay(lastLogInTime, currentLogInTime)) {
+        if (!Comparer.isSameDay(lastLogInTime, currentLogInTime)) {
             editor.putInt(INTRADAY_RECITED_COUNT, 0)
                     .putInt(INTRADAY_REVIEWED_COUNT, 0)
                     .putInt(INTRADAY_NEED_REVIEW_COUNT, provider.getIntradayNeedReviewPassageCount());
