@@ -5,7 +5,7 @@
     android:id="@+id/activity_passage_setting"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="@dimen/margin_horizontal_mid"
+    android:padding="@dimen/margin_mid_horizontal"
     tools:context="com.cjq.tool.memorytour.ui.activity.PassageSettingActivity">
 
     <include layout="@layout/group_section_import"
@@ -30,5 +30,5 @@
         android:id="@+id/btn_add_to_recite"
         android:text="@string/btn_add_to_recite"
         android:background="@drawable/ic_bg_button_single"
-        android:layout_marginTop="@dimen/margin_vertical_small"/>
+        android:layout_marginTop="@dimen/margin_small_vertical"/>
 </LinearLayout>

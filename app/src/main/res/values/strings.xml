@@ -30,12 +30,6 @@
     <string name="ppt_intraday_passages_reviewed">今日复习任务已完成</string>
     <string name="ppt_intraday_passages_recited">今日学习任务已完成</string>
     <string name="ppt_no_not_to_recite_passages">当前记忆候选库为空，可在“奇技淫巧”中修改待记忆章节库</string>
-
-    <!-- 功能切换面板 -->
-    <string name="tv_everyday_recite">回梦仙游</string>
-    <string name="tv_new_mission">开疆拓土</string>
-    <string name="tv_history_record">镜花水月</string>
-    <string name="tv_special_function">奇技淫巧</string>
     <!-- 特殊功能界面 -->
     <string name="tv_import_books_label">导入书目</string>
     <string name="tv_import_chapters_label">导入篇目</string>
@@ -82,8 +76,6 @@
     <string name="ppt_database_open_failed">本地数据库开启失败</string>
     <string name="ppt_exit_app">再按一次离开记忆之旅</string>
     <string name="ppt_import_user_info_failed">导入用户记忆信息失败</string>
-    <!-- BaseFragment -->
-    <string name="ppt_experience_update_failed">体会更新失败</string>
     <!-- 新任务界面 -->
     <string name="ppt_reach_last_passage_new_mission">暂时没有更多未记忆章节在库</string>
     <string name="ppt_passage_content_null">当前章节内容不存在</string>
@@ -102,6 +94,9 @@
     <string name="ppt_content_null_appreciation">当前章节无赏析</string>
     <string name="ppt_content_null_author">当前章节无作者简介</string>
     <string name="ppt_content_null_experience">当前章节无体会</string>
+    <string name="ppt_reach_last_passage_default">已至尾节</string>
+    <string name="ppt_reach_first_passage_default">已至首节</string>
+    <string name="ppt_current_passage_empty">当前章节不存在</string>
     <!-- 新增未记忆任务界面 -->
     <string name="ppt_section_map_instructing">正在建立记忆库视图...</string>
     <string name="ppt_section_map_build_error">记忆库视图创建失败</string>
@@ -118,13 +113,8 @@
     <string name="ppt_custom_name_modify_failed">自定义名称修改失败</string>
     <string name="ppt_daily_missions_load_failed">日常任务导入失败</string>
     <string name="ppt_part_mission_load_failed">部分任务载入失败</string>
-    <string name="ppt_no_daily_missions">今日没有章节需要复习</string>
-    <string name="ppt_daily_missions_completed">今日记忆任务全部完成</string>
     <!-- 记忆测试界面 -->
     <string name="ppt_title_modify_custom_name">修改自定义名称</string>
-
-    <!-- 其他 -->
-    <string name="ppt_reach_last_passage_default">已至尾节</string>
-    <string name="ppt_reach_first_passage_default">已至首节</string>
-    <string name="ppt_current_passage_empty">当前章节不存在</string>
+    <!-- 体会设置界面 -->
+    <string name="ppt_experience_update_failed">体会更新失败</string>
 </resources>

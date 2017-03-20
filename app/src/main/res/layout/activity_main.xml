@@ -22,7 +22,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginBottom="@dimen/margin_vertical_small">
+                android:layout_marginBottom="@dimen/margin_small_vertical">
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -40,7 +40,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginBottom="@dimen/margin_vertical_small">
+                android:layout_marginBottom="@dimen/margin_small_vertical">
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -58,19 +58,19 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/tv_intraday_reviewing"
-                android:layout_marginBottom="@dimen/margin_vertical_small"
+                android:layout_marginBottom="@dimen/margin_small_vertical"
                 android:textSize="@dimen/size_text_title_middle"/>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/tv_total_reviewing"
-                android:layout_marginBottom="@dimen/margin_vertical_small"
+                android:layout_marginBottom="@dimen/margin_small_vertical"
                 android:textSize="@dimen/size_text_title_middle"/>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/tv_total_not_recite"
-                android:layout_marginBottom="@dimen/margin_vertical_small"
+                android:layout_marginBottom="@dimen/margin_small_vertical"
                 android:textSize="@dimen/size_text_title_middle"/>
             <TextView
                 android:layout_width="wrap_content"

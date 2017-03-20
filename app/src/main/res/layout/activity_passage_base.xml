@@ -15,8 +15,8 @@
             android:id="@+id/ib_set_experience"
             android:layout_alignParentTop="true"
             android:layout_alignParentLeft="true"
-            android:layout_marginTop="@dimen/margin_vertical_mid"
-            android:layout_marginLeft="@dimen/margin_horizontal_mid"
+            android:layout_marginTop="@dimen/margin_mid_vertical"
+            android:layout_marginLeft="@dimen/margin_mid_horizontal"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_set_experience"
             android:background="@android:color/transparent" />
@@ -25,8 +25,8 @@
             android:layout_height="@dimen/size_image_small"
             android:id="@+id/ib_history_record"
             android:layout_toRightOf="@id/ib_set_experience"
-            android:layout_marginTop="@dimen/margin_vertical_mid"
-            android:layout_marginLeft="@dimen/margin_horizontal_small"
+            android:layout_marginTop="@dimen/margin_mid_vertical"
+            android:layout_marginLeft="@dimen/margin_small_horizontal"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_history_record"
             android:background="@android:color/transparent" />
@@ -36,8 +36,8 @@
             android:id="@+id/ib_auxiliary_function"
             android:layout_alignParentTop="true"
             android:layout_alignParentEnd="true"
-            android:layout_marginTop="@dimen/margin_vertical_mid"
-            android:layout_marginRight="@dimen/margin_horizontal_mid"
+            android:layout_marginTop="@dimen/margin_mid_vertical"
+            android:layout_marginRight="@dimen/margin_mid_horizontal"
             android:scaleType="fitCenter"
             android:visibility="gone"
             android:background="@android:color/transparent"/>

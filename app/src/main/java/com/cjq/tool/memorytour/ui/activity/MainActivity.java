@@ -10,7 +10,6 @@ import android.widget.TextView;
 import com.cjq.tool.memorytour.R;
 import com.cjq.tool.memorytour.bean.UserInfo;
 import com.cjq.tool.memorytour.io.sqlite.SQLiteManager;
-import com.cjq.tool.memorytour.ui.fragment.BaseFragment;
 import com.cjq.tool.memorytour.ui.toast.Prompter;
 import com.cjq.tool.memorytour.util.Logger;
 

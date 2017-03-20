@@ -64,7 +64,7 @@ public abstract class BaseDialog extends DialogFragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setStyle(DialogFragment.STYLE_NO_TITLE, 0);
-        setChildViewVerticalIntervalDp(getResources().getDimensionPixelSize(R.dimen.margin_vertical_small));
+        setChildViewVerticalIntervalDp(getResources().getDimensionPixelSize(R.dimen.margin_small_vertical));
     }
 
     @Nullable
