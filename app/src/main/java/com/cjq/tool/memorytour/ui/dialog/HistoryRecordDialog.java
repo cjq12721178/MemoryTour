@@ -37,7 +37,7 @@ public class HistoryRecordDialog extends BaseDialog<HistoryRecordDialog.Decorato
 
     private String generateHistoryRecordsDescription(List<HistoryRecord> historyRecords) {
         if (historyRecords == null || historyRecords.size() == 0)
-            return getString(R.string.tv_no_history_record);
+            return null;
         Calendar calendar = Calendar.getInstance();
         int year = 0;
         StringBuilder builder = new StringBuilder(100);
@@ -66,7 +66,11 @@ public class HistoryRecordDialog extends BaseDialog<HistoryRecordDialog.Decorato
     @Override
     protected void onSetContentView(View content, Decorator decorator, @Nullable Bundle bundle) {
         TextView tvHistoryRecord = (TextView)content.findViewById(R.id.tv_history_record);
-        tvHistoryRecord.setText(getArguments().getString(ARGUMENT_KEY_HISTORY_RECORDS_DESCRIPTION));
+        String description = getArguments().
+                getString(ARGUMENT_KEY_HISTORY_RECORDS_DESCRIPTION);
+        tvHistoryRecord.setText(description != null ?
+                description :
+                getString(R.string.tv_no_history_record));
     }
 
     public void setHistoryRecord(List<HistoryRecord> historyRecords) {
