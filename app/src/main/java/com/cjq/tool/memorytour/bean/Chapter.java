@@ -1,5 +1,8 @@
 package com.cjq.tool.memorytour.bean;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.cjq.tool.memorytour.exception.SectionIdException;
 import com.cjq.tool.memorytour.util.Converter;
 
@@ -23,6 +26,29 @@ public class Chapter extends BaseChapter {
     public Chapter(int id) {
         super(id);
     }
+
+    protected Chapter(Parcel in) {
+        super(in);
+        introduction = in.readString();
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        super.writeToParcel(dest, flags);
+        dest.writeString(introduction);
+    }
+
+    public static final Creator<Chapter> CREATOR = new Creator<Chapter>() {
+        @Override
+        public Chapter createFromParcel(Parcel in) {
+            return new Chapter(in);
+        }
+
+        @Override
+        public Chapter[] newArray(int size) {
+            return new Chapter[size];
+        }
+    };
 
     public String getIntroduction() {
         return introduction;

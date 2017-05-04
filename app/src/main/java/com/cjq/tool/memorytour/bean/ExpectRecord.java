@@ -1,6 +1,8 @@
 package com.cjq.tool.memorytour.bean;
 
 import android.database.Cursor;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 /**
  * Created by KAT on 2016/11/8.
@@ -62,6 +64,27 @@ public class ExpectRecord extends Record {
     public long getNextReciteDateInMillis(boolean remembered) {
         return pattern.getMemoryTime(pattern.getNextStage(stage, remembered));
     }
+
+    protected ExpectRecord(Parcel src) {
+        super(src);
+        stage = src.readInt();
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        super.writeToParcel(dest, flags);
+        dest.writeInt(stage);
+    }
+
+    public static final Parcelable.Creator<ExpectRecord> CREATOR = new Parcelable.Creator<ExpectRecord>() {
+        public ExpectRecord createFromParcel(Parcel in) {
+            return new ExpectRecord(in);
+        }
+
+        public ExpectRecord[] newArray(int size) {
+            return new ExpectRecord[size];
+        }
+    };
 
     public static class ColumnIndex {
         public final int ID;

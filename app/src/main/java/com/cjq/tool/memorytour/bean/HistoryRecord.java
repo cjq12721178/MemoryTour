@@ -1,6 +1,8 @@
 package com.cjq.tool.memorytour.bean;
 
 import android.database.Cursor;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import com.cjq.tool.memorytour.exception.NullMemoryPatternException;
 
@@ -18,6 +20,12 @@ public class HistoryRecord extends Record {
     private boolean result;
     private int postponeDays;
 
+    protected HistoryRecord(Parcel in) {
+        super(in);
+        result = in.readByte() == 1;
+        postponeDays = in.readInt();
+    }
+
     private HistoryRecord() {
         super();
     }
@@ -25,6 +33,16 @@ public class HistoryRecord extends Record {
     private HistoryRecord(String id) {
         super(id);
     }
+
+    public static final Parcelable.Creator<HistoryRecord> CREATOR = new Parcelable.Creator<HistoryRecord>() {
+        public HistoryRecord createFromParcel(Parcel in) {
+            return new HistoryRecord(in);
+        }
+
+        public HistoryRecord[] newArray(int size) {
+            return new HistoryRecord[size];
+        }
+    };
 
     public static HistoryRecord make(boolean remembered,
                                      int postponeDays,
@@ -65,6 +83,13 @@ public class HistoryRecord extends Record {
 
     public int getPostponeDays() {
         return postponeDays;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        super.writeToParcel(dest, flags);
+        dest.writeByte((byte)(result ? 1 : 0));
+        dest.writeInt(postponeDays);
     }
 
     public static class ColumnIndex {

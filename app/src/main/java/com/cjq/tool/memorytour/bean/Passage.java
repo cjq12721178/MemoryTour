@@ -1,6 +1,8 @@
 package com.cjq.tool.memorytour.bean;
 
 import android.database.Cursor;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.text.TextUtils;
 
 import com.cjq.tool.memorytour.exception.NullExpectRecordException;
@@ -40,6 +42,49 @@ public class Passage extends BasePassage {
     public Passage(int id) {
         super(id);
     }
+
+    protected Passage(Parcel in) {
+        super(in);
+        customName = in.readString();
+        authorName = in.readString();
+        authorDynasty = in.readString();
+        content = in.readString();
+        comments = in.readString();
+        translation = in.readString();
+        appreciation = in.readString();
+        authorIntroduction = in.readString();
+        experience = in.readString();
+        expectRecord = in.readParcelable(ExpectRecord.class.getClassLoader());
+        historyRecords = in.createTypedArrayList(HistoryRecord.CREATOR);
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        super.writeToParcel(dest, flags);
+        dest.writeString(customName);
+        dest.writeString(authorName);
+        dest.writeString(authorDynasty);
+        dest.writeString(content);
+        dest.writeString(comments);
+        dest.writeString(translation);
+        dest.writeString(appreciation);
+        dest.writeString(authorIntroduction);
+        dest.writeString(experience);
+        dest.writeParcelable(expectRecord, flags);
+        dest.writeTypedList(historyRecords);
+    }
+
+    public static final Creator<Passage> CREATOR = new Creator<Passage>() {
+        @Override
+        public Passage createFromParcel(Parcel in) {
+            return new Passage(in);
+        }
+
+        @Override
+        public Passage[] newArray(int size) {
+            return new Passage[size];
+        }
+    };
 
     //没有MemoryException和MemoryRecord
     public static Passage[] buildMultipleWithoutRecord(Cursor cursor) {

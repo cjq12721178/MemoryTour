@@ -1,5 +1,8 @@
 package com.cjq.tool.memorytour.bean;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.cjq.tool.memorytour.exception.IllegalStageException;
 
 import java.util.Calendar;

@@ -1,6 +1,8 @@
 package com.cjq.tool.memorytour.bean;
 
 import android.database.Cursor;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import com.cjq.tool.memorytour.exception.RecitableMemoryStateException;
 import com.cjq.tool.memorytour.util.Logger;
@@ -8,7 +10,9 @@ import com.cjq.tool.memorytour.util.Logger;
 /**
  * Created by KAT on 2016/10/28.
  */
-public class RecitablePassage extends BasePassage implements Recitable {
+public class RecitablePassage
+        extends BasePassage
+        implements Recitable {
 
     private boolean recitable;
     private MemoryState memoryState;
@@ -16,6 +20,31 @@ public class RecitablePassage extends BasePassage implements Recitable {
     public RecitablePassage(int id) {
         super(id);
     }
+
+    protected RecitablePassage(Parcel in) {
+        super(in);
+        recitable = in.readByte() != 0;
+        memoryState = (MemoryState) in.readSerializable();
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        super.writeToParcel(dest, flags);
+        dest.writeByte((byte) (recitable ? 1 : 0));
+        dest.writeSerializable(memoryState);
+    }
+
+    public static final Creator<RecitablePassage> CREATOR = new Creator<RecitablePassage>() {
+        @Override
+        public RecitablePassage createFromParcel(Parcel in) {
+            return new RecitablePassage(in);
+        }
+
+        @Override
+        public RecitablePassage[] newArray(int size) {
+            return new RecitablePassage[size];
+        }
+    };
 
     @Override
     public boolean isRecitable() {

@@ -2,8 +2,8 @@ package com.cjq.tool.memorytour.ui.activity;
 
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.TextView;
 
@@ -12,6 +12,7 @@ import com.cjq.tool.memorytour.bean.UserInfo;
 import com.cjq.tool.memorytour.io.sqlite.SQLiteManager;
 import com.cjq.tool.memorytour.ui.toast.Prompter;
 import com.cjq.tool.memorytour.util.Logger;
+import com.cjq.tool.qbox.ui.dialog.BaseDialog;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -30,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        decorateDialog();
         setMainInterface();
         initPrompter();
         registerLogger();
@@ -41,6 +43,19 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         closeDatabase();
         super.onDestroy();
+    }
+
+    private void decorateDialog() {
+        BaseDialog.Decorator baseDecorator = BaseDialog.getBaseOverallDecorator();
+        baseDecorator.setBaseBackground(R.drawable.ic_bg_dialog_setting);
+        baseDecorator.setBasePadding(
+                R.dimen.padding_dialog_base_horizontal,
+                R.dimen.padding_dialog_base_vertical,
+                R.dimen.padding_dialog_base_horizontal,
+                R.dimen.padding_dialog_base_vertical);
+        baseDecorator.setExitButtonTextColor(android.R.color.white);
+        baseDecorator.setExitButtonBackground(R.drawable.ic_bg_button_multiple);
+        baseDecorator.setSeparationLineExists(false);
     }
 
     private void setMainInterface() {
@@ -142,11 +157,14 @@ public class MainActivity extends AppCompatActivity {
                             REQUEST_CODE_REVIEW_STUDY);
                 } break;
                 case R.id.tv_library: {
+
                     //TODO: library
                 } break;
                 case R.id.tv_setting: {
                     startActivity(new Intent(MainActivity.this,
                             PassageSettingActivity.class));
+//                    startActivity(new Intent(MainActivity.this,
+//                            PeachGardenActivity.class));
                 } break;
             }
         }

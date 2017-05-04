@@ -8,6 +8,6 @@
         android:textOn="@string/swt_add_experience"
         android:textOff="@string/swt_modify_experience"
         android:checked="true"/>
-    <include layout="@layout/et_general"
+    <include layout="@layout/qbox_edit_text"
         android:id="@+id/il_experience" />
 </merge>

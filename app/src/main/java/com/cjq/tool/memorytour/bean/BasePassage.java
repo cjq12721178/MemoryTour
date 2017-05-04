@@ -1,11 +1,13 @@
 package com.cjq.tool.memorytour.bean;
 
+import android.os.Parcel;
+
 import com.cjq.tool.memorytour.exception.SectionIdException;
 
 /**
  * Created by KAT on 2016/10/28.
  */
-public class BasePassage extends Section {
+public abstract class BasePassage extends Section {
 
     //数据库表名
     public static final String PASSAGE = "passage";
@@ -23,6 +25,10 @@ public class BasePassage extends Section {
 
     public BasePassage(int id) {
         super(id);
+    }
+
+    protected BasePassage(Parcel src) {
+        super(src);
     }
 
     @Override

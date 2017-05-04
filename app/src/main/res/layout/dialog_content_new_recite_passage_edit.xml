@@ -5,7 +5,7 @@
         android:layout_height="wrap_content"
         android:text="@string/tv_label_name_custom"
         android:textSize="@dimen/size_text_title_small"/>
-    <include layout="@layout/et_general"
+    <include layout="@layout/qbox_edit_text"
         android:id="@+id/et_name_custom"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>

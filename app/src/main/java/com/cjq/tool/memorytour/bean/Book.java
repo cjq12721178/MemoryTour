@@ -1,5 +1,8 @@
 package com.cjq.tool.memorytour.bean;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.cjq.tool.memorytour.exception.SectionIdException;
 import com.cjq.tool.memorytour.util.Converter;
 
@@ -23,6 +26,33 @@ public class Book extends BaseBook {
     public Book(int id) {
         super(id);
     }
+
+    protected Book(Parcel in) {
+        super(in);
+        authorName = in.readString();
+        authorDynasty = in.readString();
+        introduction = in.readString();
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        super.writeToParcel(dest, flags);
+        dest.writeString(authorName);
+        dest.writeString(authorDynasty);
+        dest.writeString(introduction);
+    }
+
+    public static final Creator<Book> CREATOR = new Creator<Book>() {
+        @Override
+        public Book createFromParcel(Parcel in) {
+            return new Book(in);
+        }
+
+        @Override
+        public Book[] newArray(int size) {
+            return new Book[size];
+        }
+    };
 
     public String getAuthorName() {
         return authorName;

@@ -10,8 +10,6 @@
     <string name="setting">设置</string>
     <!-- 相当于记忆时间间隔 -->
     <string name="memory_cycle">记忆周期(天数)</string>
-    <string name="ok">确定</string>
-    <string name="cancel">取消</string>
 
     <!-- 界面控件显示用语 -->
     <!-- 记忆信息展示面板 -->
@@ -117,4 +115,5 @@
     <string name="ppt_title_modify_custom_name">修改自定义名称</string>
     <!-- 体会设置界面 -->
     <string name="ppt_experience_update_failed">体会更新失败</string>
+    <string name="set_experience">设置体会</string>
 </resources>

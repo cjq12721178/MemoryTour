@@ -1,6 +1,7 @@
 package com.cjq.tool.memorytour.bean;
 
 import android.database.Cursor;
+import android.os.Parcel;
 
 import com.cjq.tool.memorytour.util.Logger;
 
@@ -9,7 +10,9 @@ import java.util.List;
 /**
  * Created by KAT on 2016/10/28.
  */
-public class RecitableChapter extends BaseChapter implements Recitable {
+public class RecitableChapter
+        extends BaseChapter
+        implements Recitable {
 
     private boolean recitable;
     private List<RecitablePassage> passages;
@@ -17,6 +20,31 @@ public class RecitableChapter extends BaseChapter implements Recitable {
     public RecitableChapter(int id) {
         super(id);
     }
+
+    protected RecitableChapter(Parcel in) {
+        super(in);
+        recitable = in.readByte() != 0;
+        passages = in.createTypedArrayList(RecitablePassage.CREATOR);
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        super.writeToParcel(dest, flags);
+        dest.writeByte((byte)(recitable ? 1 : 0));
+        dest.writeTypedList(passages);
+    }
+
+    public static final Creator<RecitableChapter> CREATOR = new Creator<RecitableChapter>() {
+        @Override
+        public RecitableChapter createFromParcel(Parcel in) {
+            return new RecitableChapter(in);
+        }
+
+        @Override
+        public RecitableChapter[] newArray(int size) {
+            return new RecitableChapter[size];
+        }
+    };
 
     @Override
     public boolean isRecitable() {

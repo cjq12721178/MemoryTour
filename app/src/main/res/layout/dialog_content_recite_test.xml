@@ -6,8 +6,8 @@
         android:layout_height="wrap_content"
         android:id="@+id/tv_recite_name_label"
         android:text="@string/tv_recite_name_label"
-        android:textSize="@dimen/size_text_title_small"/>
-    <com.cjq.tool.memorytour.ui.view.TextViewEx
+        android:textSize="@dimen/size_text_activity"/>
+    <com.cjq.tool.qbox.ui.view.TextViewEx
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/tv_recite_name_content"
@@ -21,7 +21,7 @@
         android:layout_height="wrap_content"
         android:id="@+id/tv_expect_recite_time_label"
         android:text="@string/tv_expect_recite_time_label"
-        android:textSize="@dimen/size_text_title_small" />
+        android:textSize="@dimen/size_text_activity" />
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

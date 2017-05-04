@@ -1,5 +1,7 @@
 package com.cjq.tool.memorytour.bean;
 
+import android.os.Parcel;
+
 import com.cjq.tool.memorytour.exception.SectionIdException;
 
 import java.util.List;
@@ -7,13 +9,17 @@ import java.util.List;
 /**
  * Created by KAT on 2016/10/28.
  */
-public class BaseBook extends Section {
+public abstract class BaseBook extends Section {
 
     //数据库表名
     public static final String BOOK = "book";
 
     public BaseBook(int id) {
         super(id);
+    }
+
+    protected BaseBook(Parcel in) {
+        super(in);
     }
 
     @Override

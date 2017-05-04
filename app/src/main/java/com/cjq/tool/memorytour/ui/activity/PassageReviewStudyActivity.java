@@ -2,6 +2,7 @@ package com.cjq.tool.memorytour.ui.activity;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.view.View;
 import android.widget.ImageButton;
 
@@ -27,9 +28,13 @@ import java.util.List;
 public class PassageReviewStudyActivity
         extends PassageBaseActivity
         implements ReciteTestDialog.OnTestEventListener,
-        NewRecitePassageEditDialog.OnDestroyEditListener {
+        NewRecitePassageEditDialog.OnPassageRecitedListener {
 
-    private List<Passage> passages = new ArrayList<>();
+    private static final String ARGUMENT_KEY_IS_REVIEW_PATTERN = "is_review";
+    private static final String ARGUMENT_KEY_IS_REVIEW_DIALOG_PROMPT = "is_review_dialog_prompt";
+    private static final String ARGUMENT_KEY_PASSAGES = "passages";
+
+    private ArrayList<Passage> passages = new ArrayList<>();
     private boolean isReviewPattern;
     private ReciteTestDialog reciteTestDialog;
     private NewRecitePassageEditDialog newRecitePassageEditDialog;
@@ -38,39 +43,92 @@ public class PassageReviewStudyActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        importPassages();
+        initDialog(savedInstanceState);
+        importPassages(savedInstanceState);
         updatePromptInformation();
     }
 
-    private void importPassages() {
-        if (UserInfo.getIntradayReviewingCount() > 0) {
-            //如有章节需要复习，则设置复习模式
-            isReviewPattern = true;
-            setAuxiliaryFunctionImageResource(R.drawable.ic_recite_test);
-            setEnableSlideSwitch(false);
-            SearchDailyMemoryMissionTask task = new SearchDailyMemoryMissionTask();
-            task.execute();
-        } else {
-            //设置学习模式
-            isReviewPattern = false;
-            setAuxiliaryFunctionVisibility(View.INVISIBLE);
-            setEnableSlideSwitch(true);
-            if (UserInfo.getIntradayRecitingCount() > 0) {
-                if (UserInfo.getIntradayNeedReviewCount() == 0) {
-                    Prompter.show(R.string.ppt_no_reviewing_passage);
-                } else {
-                    Prompter.show(R.string.ppt_intraday_passages_reviewed);
-                }
+    private void initDialog(Bundle savedInstanceState) {
+        if (savedInstanceState == null) {
+            reciteTestDialog = new ReciteTestDialog();
+            newRecitePassageEditDialog = new NewRecitePassageEditDialog();
+        }
+    }
+
+    private void importPassages(Bundle savedInstanceState) {
+        if (savedInstanceState == null) {
+            if (UserInfo.getIntradayReviewingCount() > 0) {
+                //如有章节需要复习，则设置复习模式
+//                isReviewPattern = true;
+//                setAuxiliaryFunctionImageResource(R.drawable.ic_recite_test);
+//                setEnableSlideSwitch(false);
+                setPattern(true);
+                SearchDailyMemoryMissionTask task = new SearchDailyMemoryMissionTask();
+                task.execute();
             } else {
-                Prompter.show(R.string.ppt_intraday_passages_completed);
+                //设置学习模式
+                setPattern(false);
+//                isReviewPattern = false;
+//                setAuxiliaryFunctionVisibility(View.INVISIBLE);
+//                setEnableSlideSwitch(true);
+                if (UserInfo.getIntradayRecitingCount() > 0) {
+                    if (UserInfo.getIntradayNeedReviewCount() == 0) {
+                        Prompter.show(R.string.ppt_no_reviewing_passage);
+                    } else {
+                        Prompter.show(R.string.ppt_intraday_passages_reviewed);
+                    }
+                } else {
+                    Prompter.show(R.string.ppt_intraday_passages_completed);
+                }
+                importNoRecitePassages(Passage.UNKNOWN_ID);
             }
-            importNoRecitePassages(Passage.UNKNOWN_ID);
+        } else {
+            isReviewPattern = savedInstanceState.getBoolean(ARGUMENT_KEY_IS_REVIEW_PATTERN);
+            passages = savedInstanceState.getParcelableArrayList(ARGUMENT_KEY_PASSAGES);
+        }
+    }
+
+    private void setPattern(boolean isReview) {
+        isReviewPattern = isReview;
+        setEnableSlideSwitch(!isReview);
+        if (isReview) {
+            setAuxiliaryFunctionImageResource(R.drawable.ic_recite_test);
+        } else {
+            setAuxiliaryFunctionVisibility(View.INVISIBLE);
         }
     }
 
     private void importNoRecitePassages(int passageIdLowThresh) {
         SelectPassageTask selectPassageTask = new SelectPassageTask();
         selectPassageTask.execute(passageIdLowThresh, SELECT_PASSAGE_COUNT);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putBoolean(ARGUMENT_KEY_IS_REVIEW_PATTERN, isReviewPattern);
+        outState.putParcelableArrayList(ARGUMENT_KEY_PASSAGES, passages);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        if (savedInstanceState != null) {
+            reciteTestDialog = (ReciteTestDialog) getSupportFragmentManager().
+                    findFragmentByTag(ReciteTestDialog.TAG);
+            newRecitePassageEditDialog = (NewRecitePassageEditDialog) getSupportFragmentManager().
+                    findFragmentByTag(NewRecitePassageEditDialog.TAG);
+            if (!isReviewPattern || reciteTestDialog == null) {
+                restorePassageView();
+            }
+            if (reciteTestDialog == null) {
+                reciteTestDialog = new ReciteTestDialog();
+            }
+            if (newRecitePassageEditDialog == null) {
+                newRecitePassageEditDialog = new NewRecitePassageEditDialog();
+            }
+            restoreAuxiliaryFunctionButton(savedInstanceState);
+        }
     }
 
     @Override
@@ -109,18 +167,12 @@ public class PassageReviewStudyActivity
     protected void onAuxiliaryFunctionClick(ImageButton ib) {
         if (isReviewPattern) {
             clearPassageView();
-            if (reciteTestDialog == null) {
-                reciteTestDialog = new ReciteTestDialog();
-                reciteTestDialog.setOnTestEventListener(this);
-            }
-            reciteTestDialog.show(getSupportFragmentManager(), getCurrentPassage());
+            reciteTestDialog.show(getSupportFragmentManager(),
+                    getCurrentPassage());
         } else {
             if (ib.isEnabled()) {
-                if (newRecitePassageEditDialog == null) {
-                    newRecitePassageEditDialog = new NewRecitePassageEditDialog();
-                    newRecitePassageEditDialog.setOnDestroyEditListener(this);
-                }
-                newRecitePassageEditDialog.show(getSupportFragmentManager(), getCurrentPassage());
+                newRecitePassageEditDialog.show(getSupportFragmentManager(),
+                        getCurrentPassage());
             } else {
                 Prompter.show(R.string.ppt_memory_data_not_modified);
             }
@@ -154,7 +206,7 @@ public class PassageReviewStudyActivity
         if (nextPassage() == null) {
             passages.clear();
             setPassageCurrentIndex(-1);
-            importPassages();
+            importPassages(null);
             return true;
         } else {
             reciteTestDialog.refresh(getCurrentPassage());
@@ -266,6 +318,7 @@ public class PassageReviewStudyActivity
             reciteTestDialog.enableModifyCustomName();
             if (result) {
                 passage.setCustomName(newCustomName);
+                reciteTestDialog.refresh(passage);
             } else {
                 Prompter.show(R.string.ppt_custom_name_modify_failed);
             }

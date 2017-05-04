@@ -7,6 +7,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.view.View;
 import android.widget.TextView;
 
+import com.cjq.tool.qbox.ui.dialog.BaseDialog;
 import com.cjq.tool.memorytour.R;
 import com.cjq.tool.memorytour.bean.HistoryRecord;
 
@@ -16,29 +17,25 @@ import java.util.List;
 /**
  * Created by KAT on 2016/11/28.
  */
-public class HistoryRecordDialog extends BaseDialog {
+public class HistoryRecordDialog extends BaseDialog<HistoryRecordDialog.Decorator> {
 
-    private static final String TAG = "history";
-    private List<HistoryRecord> historyRecords;
-    private TextView tvHistoryRecord;
+    private static final String TAG = "in_tag_history";
+    private static final String ARGUMENT_KEY_HISTORY_RECORDS_DESCRIPTION = "in_history_record";
 
-    @Override
-    protected int getContentLayoutRes() {
-        return R.layout.dialog_content_history_record;
+    public static class Decorator extends BaseDialog.Decorator {
+
+        @Override
+        protected int onSetContentLayout() {
+            return R.layout.dialog_content_history_record;
+        }
     }
 
-    @Override
-    protected void onFindView(View content, @Nullable Bundle savedInstanceState) {
-        tvHistoryRecord = (TextView)content.findViewById(R.id.tv_history_record);
-        setTitle(getString(R.string.tv_title_history_record));
+    public HistoryRecordDialog() {
+        super();
+        setExitType(EXIT_TYPE_OK);
     }
 
-    @Override
-    protected void onSetViewData() {
-        tvHistoryRecord.setText(getHistoryRecords());
-    }
-
-    private String getHistoryRecords() {
+    private String generateHistoryRecordsDescription(List<HistoryRecord> historyRecords) {
         if (historyRecords == null || historyRecords.size() == 0)
             return getString(R.string.tv_no_history_record);
         Calendar calendar = Calendar.getInstance();
@@ -67,17 +64,23 @@ public class HistoryRecordDialog extends BaseDialog {
     }
 
     @Override
-    protected ExitType getExitType() {
-        return ExitType.OK;
+    protected void onSetContentView(View content, Decorator decorator, @Nullable Bundle bundle) {
+        TextView tvHistoryRecord = (TextView)content.findViewById(R.id.tv_history_record);
+        tvHistoryRecord.setText(getArguments().getString(ARGUMENT_KEY_HISTORY_RECORDS_DESCRIPTION));
+    }
+
+    public void setHistoryRecord(List<HistoryRecord> historyRecords) {
+        getArguments().putString(ARGUMENT_KEY_HISTORY_RECORDS_DESCRIPTION,
+                generateHistoryRecordsDescription(historyRecords));
     }
 
     public void show(FragmentManager manager, List<HistoryRecord> historyRecords) {
-        this.historyRecords = historyRecords;
-        super.show(manager, TAG);
+        setHistoryRecord(historyRecords);
+        super.show(manager, TAG, R.string.tv_title_history_record);
     }
 
     public int show(FragmentTransaction transaction, List<HistoryRecord> historyRecords) {
-        this.historyRecords = historyRecords;
-        return super.show(transaction, TAG);
+        setHistoryRecord(historyRecords);
+        return super.show(transaction, TAG, R.string.tv_title_history_record);
     }
 }

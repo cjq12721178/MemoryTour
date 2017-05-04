@@ -32,4 +32,7 @@
     <dimen name="size_image_middle">48dp</dimen>
     <dimen name="size_image_large">64dp</dimen>
     <dimen name="width_dialog_base">300dp</dimen>
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
 </resources>

@@ -182,7 +182,8 @@ public class UserInfo {
         getEditor().putInt(INTRADAY_RECITED_COUNT, userInfo.intradayRecitedCount + 1)
                 .commit();
         ++userInfo.intradayRecitedCount;
-        ++userInfo.totalNotReciteCount;
+        ++userInfo.totalReviewingCount;
+        --userInfo.totalNotReciteCount;
     }
 
     //获取当日总共需复习章节数目

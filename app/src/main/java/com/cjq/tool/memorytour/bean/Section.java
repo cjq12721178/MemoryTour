@@ -1,13 +1,15 @@
 package com.cjq.tool.memorytour.bean;
 
-import android.database.Cursor;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import org.xml.sax.helpers.DefaultHandler;
 
 /**
  * Created by KAT on 2016/9/21.
  */
-public abstract class Section implements GeneralColumnName {
+public abstract class Section
+        implements GeneralColumnName, Parcelable {
 
     //通用列名
     public static final String NAME = "name";
@@ -43,6 +45,22 @@ public abstract class Section implements GeneralColumnName {
     public Section(int id) {
         checkId(id);
         this.id = id;
+    }
+
+    protected Section(Parcel src) {
+        id = src.readInt();
+        name = src.readString();
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(id);
+        dest.writeString(name);
     }
 
     public int getId() {

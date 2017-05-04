@@ -25,18 +25,28 @@ import android.widget.TextView;
 
 import com.cjq.tool.memorytour.R;
 import com.cjq.tool.memorytour.bean.Passage;
-import com.cjq.tool.memorytour.bean.UserInfo;
 import com.cjq.tool.memorytour.io.sqlite.SQLiteManager;
 import com.cjq.tool.memorytour.ui.dialog.ExperienceEditDialog;
 import com.cjq.tool.memorytour.ui.dialog.HistoryRecordDialog;
-import com.cjq.tool.memorytour.ui.dialog.ReciteTestDialog;
 import com.cjq.tool.memorytour.ui.toast.Prompter;
 import com.cjq.tool.memorytour.util.Converter;
 import com.cjq.tool.memorytour.util.Logger;
 
-public abstract class PassageBaseActivity extends AppCompatActivity {
+public abstract class PassageBaseActivity
+        extends AppCompatActivity
+        implements ExperienceEditDialog.OnSetExperienceListener {
 
     protected static final int SELECT_PASSAGE_COUNT = 3;
+    private static final String ARGUMENT_KEY_ENABLE_SLIDE_SWITCH = "enable_slide_switch";
+    private static final String ARGUMENT_KEY_IS_FULL_SCREEN = "is_full_screen";
+    private static final String ARGUMENT_KEY_CURRENT_PASSAGE_INDEX = "current_passage_index";
+    private static final String ARGUMENT_KEY_PREVIOUS_PASSAGE_ID = "prev_passage_id";
+    private static final String ARGUMENT_KEY_PREVIOUS_CHECKED_PANEL_ID = "prev_checked_panel_id";
+    //private static final String ARGUMENT_KEY_SCROLL_POSITION_PERCENTS = "scroll_position_percents";
+    private static final String ARGUMENT_KEY_AUXILIARY_FUNCTION_BACKGROUND = "auxiliary_function_background";
+    private static final String ARGUMENT_KEY_AUXILIARY_FUNCTION_VISIBLE = "auxiliary_function_visible";
+    private static final String ARGUMENT_KEY_AUXILIARY_FUNCTION_ABILITY = "auxiliary_function_ability";
+
     private TextView tvPassageTitle;
     private TextView tvPassageContent;
     private TextView tvPromptInformation;
@@ -47,25 +57,24 @@ public abstract class PassageBaseActivity extends AppCompatActivity {
     private ImageButton ibHistoryRecord;
     private ImageButton ibAuxiliaryFunction;
     private TouchHandler touchHandler;
-    private ExperienceEditDialog experienceEditDialog;
-    private HistoryRecordDialog historyRecordDialog;
     private boolean enableSlideSwitch = false;
     private boolean isFullScreen = false;
     private int currentPassageIndex = -1;
     private int prevPassageId;
     private int prevCheckedPanelId;
     private static ContentBuilder[] contentBuilders;
-    private ScrollPositionKeeper scrollPositionKeeper = new ScrollPositionKeeper();
+    private ScrollPositionKeeper scrollPositionKeeper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_passage_base);
 
+        initSavableParameters(savedInstanceState);
         touchHandler = new TouchHandler();
-        initContentBuilder();
         rlPassageAuxiliary = (RelativeLayout)findViewById(R.id.rl_passage_auxiliary);
         rgContentPanel = (RadioGroup)findViewById(R.id.rdo_grp_content_panel);
+        rgContentPanel.check(prevCheckedPanelId == 0 ? R.id.rdo_main_body : prevCheckedPanelId);
         rgContentPanel.setOnCheckedChangeListener(touchHandler);
         tvPromptInformation = (TextView)findViewById(R.id.tv_memory_situation);
         svPassageCarrier = (ScrollView)findViewById(R.id.sv_passage_carrier);
@@ -81,6 +90,47 @@ public abstract class PassageBaseActivity extends AppCompatActivity {
         ibAuxiliaryFunction.setOnClickListener(touchHandler);
     }
 
+    private void initSavableParameters(Bundle savedInstanceState) {
+        scrollPositionKeeper = new ScrollPositionKeeper();
+        if (savedInstanceState == null) {
+            initContentBuilder();
+        } else {
+            enableSlideSwitch = savedInstanceState.getBoolean(ARGUMENT_KEY_ENABLE_SLIDE_SWITCH);
+            isFullScreen = savedInstanceState.getBoolean(ARGUMENT_KEY_IS_FULL_SCREEN);
+            currentPassageIndex = savedInstanceState.getInt(ARGUMENT_KEY_CURRENT_PASSAGE_INDEX);
+            prevPassageId = savedInstanceState.getInt(ARGUMENT_KEY_PREVIOUS_PASSAGE_ID);
+            prevCheckedPanelId = savedInstanceState.getInt(ARGUMENT_KEY_PREVIOUS_CHECKED_PANEL_ID);
+            //scrollPositionKeeper.setPositionPercents(savedInstanceState.getInt(ARGUMENT_KEY_SCROLL_POSITION));
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putBoolean(ARGUMENT_KEY_ENABLE_SLIDE_SWITCH, enableSlideSwitch);
+        outState.putBoolean(ARGUMENT_KEY_IS_FULL_SCREEN, isFullScreen);
+        outState.putInt(ARGUMENT_KEY_CURRENT_PASSAGE_INDEX, currentPassageIndex);
+        outState.putInt(ARGUMENT_KEY_PREVIOUS_PASSAGE_ID, prevPassageId);
+        outState.putInt(ARGUMENT_KEY_PREVIOUS_CHECKED_PANEL_ID, prevCheckedPanelId);
+        //outState.putInt(ARGUMENT_KEY_SCROLL_POSITION, scrollPositionKeeper.getPositionPercents());
+        outState.putInt(ARGUMENT_KEY_AUXILIARY_FUNCTION_BACKGROUND, (int)ibAuxiliaryFunction.getTag());
+        outState.putInt(ARGUMENT_KEY_AUXILIARY_FUNCTION_VISIBLE, ibAuxiliaryFunction.getVisibility());
+        outState.putBoolean(ARGUMENT_KEY_AUXILIARY_FUNCTION_ABILITY, ibAuxiliaryFunction.isEnabled());
+        getContentBuilder(prevCheckedPanelId).setScrollPositionPercents(getCurrentBrowsePositionPercents());
+        //outState.putFloat(ARGUMENT_KEY_SCROLL_POSITION_PERCENTS, getCurrentBrowsePositionPercents());
+
+        super.onSaveInstanceState(outState);
+    }
+
+    protected void restorePassageView() {
+        showPassage(getCurrentPassage(), prevCheckedPanelId);
+    }
+
+    protected void restoreAuxiliaryFunctionButton(Bundle savedInstanceState) {
+        setAuxiliaryFunctionImageResource(savedInstanceState.getInt(ARGUMENT_KEY_AUXILIARY_FUNCTION_BACKGROUND));
+        setAuxiliaryFunctionVisibility(savedInstanceState.getInt(ARGUMENT_KEY_AUXILIARY_FUNCTION_VISIBLE));
+        setAuxiliaryFunctionEnable(savedInstanceState.getBoolean(ARGUMENT_KEY_AUXILIARY_FUNCTION_ABILITY));
+    }
+
     protected void setPromptInformation(String info) {
         if (!TextUtils.equals(tvPromptInformation.getText(), info)) {
             tvPromptInformation.setText(info);
@@ -90,6 +140,7 @@ public abstract class PassageBaseActivity extends AppCompatActivity {
 
     protected void setAuxiliaryFunctionImageResource(@DrawableRes int backgroundId) {
         ibAuxiliaryFunction.setImageResource(backgroundId);
+        ibAuxiliaryFunction.setTag(backgroundId);
     }
 
     protected void setAuxiliaryFunctionEnable(boolean enabled) {
@@ -109,8 +160,8 @@ public abstract class PassageBaseActivity extends AppCompatActivity {
             int currPassageId = passage.getId();
             if (prevPassageId != currPassageId) {
                 clearContentBuilderRecord();
-            } else {
-                getContentBuilder(prevCheckedPanelId).setScrollPos(getCurrentBrowsePosition());
+            } else if (prevCheckedPanelId != checkedPanelId) {
+                getContentBuilder(prevCheckedPanelId).setScrollPositionPercents(getCurrentBrowsePositionPercents());
             }
             prevCheckedPanelId = checkedPanelId;
             //设置实际内容
@@ -120,7 +171,7 @@ public abstract class PassageBaseActivity extends AppCompatActivity {
             tvPassageContent.setGravity(realContent.charAt(0) == '　' ? Gravity.START : Gravity.CENTER_HORIZONTAL);
             //设置滚动位置
             if (prevPassageId == currPassageId) {
-                scrollPositionKeeper.setPosition(contentBuilder.getScrollPos());
+                scrollPositionKeeper.setPositionPercents(contentBuilder.getScrollPositionPercents());
                 touchHandler.post(scrollPositionKeeper);
             }
             prevPassageId = currPassageId;
@@ -161,12 +212,29 @@ public abstract class PassageBaseActivity extends AppCompatActivity {
         return builder.toString();
     }
 
-    private int getCurrentBrowsePosition() {
-        return svPassageCarrier.getScrollY();
+//    private int getCurrentBrowsePosition() {
+//        return svPassageCarrier.getScrollY();
+//    }
+
+    private float getCurrentBrowsePositionPercents() {
+        int scrollY = svPassageCarrier.getScrollY();
+        int titleHeight = tvPassageTitle.getHeight();
+        return scrollY < titleHeight ?
+                (float)scrollY / titleHeight :
+                (float)(scrollY - titleHeight) / tvPassageContent.getHeight() + 1.0f;
+        //return (float)svPassageCarrier.getScrollY() / svPassageCarrier.getScrollBarSize();
     }
 
-    private void setBrowsePosition(int position) {
-        svPassageCarrier.setScrollY(position);
+    private void setBrowsePosition(float percents) {
+        int scrollY = (int)(percents < 1.0f ?
+                percents * tvPassageTitle.getHeight() :
+                tvPassageTitle.getHeight() + (percents - 1) * tvPassageContent.getHeight());
+        svPassageCarrier.setScrollY(scrollY);
+    }
+
+    private int getScrollLength() {
+        return svPassageCarrier.getChildAt(0).getHeight() -
+                svPassageCarrier.getHeight();
     }
 
     private void showPassage(Passage passage, @IdRes int content) {
@@ -369,6 +437,16 @@ public abstract class PassageBaseActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public void onSetExperience(String experience, boolean addOrModify) {
+        Passage passage = getCurrentPassage();
+        String newExperience = getNewExperience(passage, formatExperience(experience), addOrModify);
+        if (!newExperience.equals(passage.getExperience())) {
+            ModifyExperienceTask task = new ModifyExperienceTask();
+            task.execute(passage, newExperience);
+        }
+    }
+
     private class TouchHandler
             extends Handler
             implements View.OnTouchListener,
@@ -543,27 +621,14 @@ public abstract class PassageBaseActivity extends AppCompatActivity {
         }
 
         void onExperienceEditorClick(final Passage passage) {
-            if (experienceEditDialog == null) {
-                experienceEditDialog = new ExperienceEditDialog();
-                experienceEditDialog.setOnSetExperienceListener(new ExperienceEditDialog.OnSetExperienceListener() {
-                    @Override
-                    public void onSetExperience(String experience, boolean addOrModify) {
-                        String newExperience = getNewExperience(passage, formatExperience(experience), addOrModify);
-                        if (!newExperience.equals(passage.getExperience())) {
-                            ModifyExperienceTask task = new ModifyExperienceTask();
-                            task.execute(passage, newExperience);
-                        }
-                    }
-                });
-            }
-            experienceEditDialog.show(getSupportFragmentManager(), passage.getExperience());
+            ExperienceEditDialog dialog = new ExperienceEditDialog();
+            dialog.show(getSupportFragmentManager(),
+                    passage.getExperience());
         }
 
         void onHistoryRecordViewerClick(Passage passage) {
-            if (historyRecordDialog == null) {
-                historyRecordDialog = new HistoryRecordDialog();
-            }
-            historyRecordDialog.show(getSupportFragmentManager(), passage.getHistoryRecords());
+            HistoryRecordDialog dialog = new HistoryRecordDialog();
+            dialog.show(getSupportFragmentManager(), passage.getHistoryRecords());
         }
 
         @Override
@@ -594,23 +659,27 @@ public abstract class PassageBaseActivity extends AppCompatActivity {
 
     private class ScrollPositionKeeper implements Runnable {
 
-        private int position;
+        private float positionPercents;
 
-        public ScrollPositionKeeper setPosition(int position) {
-            this.position = position;
+        public ScrollPositionKeeper setPositionPercents(float percents) {
+            positionPercents = percents;
             return this;
+        }
+
+        public float getPositionPercents() {
+            return positionPercents;
         }
 
         @Override
         public void run() {
-            setBrowsePosition(position);
+            setBrowsePosition(positionPercents);
         }
     }
 
     private static abstract class ContentBuilder {
 
         private static StringBuilder builder = new StringBuilder(256);
-        private int scrollPos;
+        private float scrollPositionPercents;
         protected String value;
         private final String nullContentWarnInfo;
 
@@ -618,16 +687,16 @@ public abstract class PassageBaseActivity extends AppCompatActivity {
             this.nullContentWarnInfo = nullContentWarnInfo;
         }
 
-        public int getScrollPos() {
-            return scrollPos;
+        public float getScrollPositionPercents() {
+            return scrollPositionPercents;
         }
 
-        public void setScrollPos(int position) {
-            scrollPos = position;
+        public void setScrollPositionPercents(float percents) {
+            scrollPositionPercents = percents;
         }
 
         public void reset() {
-            setScrollPos(0);
+            setScrollPositionPercents(0);
             value = null;
         }
 
