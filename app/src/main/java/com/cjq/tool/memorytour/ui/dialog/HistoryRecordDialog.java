@@ -68,9 +68,13 @@ public class HistoryRecordDialog extends BaseDialog<HistoryRecordDialog.Decorato
         TextView tvHistoryRecord = (TextView)content.findViewById(R.id.tv_history_record);
         String description = getArguments().
                 getString(ARGUMENT_KEY_HISTORY_RECORDS_DESCRIPTION);
-        tvHistoryRecord.setText(description != null ?
-                description :
-                getString(R.string.tv_no_history_record));
+        if (description != null) {
+            tvHistoryRecord.setText(description);
+            tvHistoryRecord.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
+        } else {
+            tvHistoryRecord.setText(getString(R.string.tv_no_history_record));
+            tvHistoryRecord.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        }
     }
 
     public void setHistoryRecord(List<HistoryRecord> historyRecords) {
