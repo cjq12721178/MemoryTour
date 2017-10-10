@@ -406,8 +406,10 @@ public class SQLiteManager {
     private static String getWhereStatementAsId(String idName, String idValue) {
         buffer.setLength(0);
         return buffer.append(idName)
-                .append('=')
-                .append(idValue).toString();
+                .append("='")
+                .append(idValue)
+                .append("'")
+                .toString();
     }
 
     private static String getSelectStatementForObject(String table, String idName, int idValue) {

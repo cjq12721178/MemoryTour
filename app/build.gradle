@@ -15,8 +15,8 @@ android {
         applicationId 'com.cjq.tool'
         minSdkVersion 17
         targetSdkVersion 24
-        versionCode 19
-        versionName "0.2.8"
+        versionCode 20
+        versionName "1.0.0"
     }
     buildTypes {
         release {

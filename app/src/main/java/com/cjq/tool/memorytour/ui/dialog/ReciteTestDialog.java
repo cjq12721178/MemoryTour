@@ -64,13 +64,17 @@ public class ReciteTestDialog
         rgReciteResult = (RadioGroup)content.findViewById(R.id.rg_recite_result);
         rgReciteResult.setOnCheckedChangeListener(this);
 
-        setViewValue();
+        setViewValue(false);
     }
 
-    private void setViewValue() {
+    private void setViewValue(boolean includeReciteResultState) {
         Bundle arguments = getArguments();
         tvCustomName.setText(arguments.getString(ARGUMENT_KEY_PASSAGE_NAME));
-        onCheckedChanged(rgReciteResult, rgReciteResult.getCheckedRadioButtonId());
+        if (includeReciteResultState) {
+            rgReciteResult.check(R.id.rdo_remembered);
+        } else {
+            onCheckedChanged(rgReciteResult, rgReciteResult.getCheckedRadioButtonId());
+        }
     }
 
     public interface OnTestEventListener {
@@ -211,7 +215,7 @@ public class ReciteTestDialog
 
     public void refresh(Passage chip) {
         setPassage(chip);
-        setViewValue();
+        setViewValue(rgReciteResult.getCheckedRadioButtonId() != R.id.rdo_remembered);
     }
 
     private void setPassage(Passage passage) {
