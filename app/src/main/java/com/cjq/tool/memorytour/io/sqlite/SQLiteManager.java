@@ -157,7 +157,8 @@ public class SQLiteManager {
                     .append('<')
                     .append(System.currentTimeMillis())
                     .append(" ORDER BY ")
-                    .append(ExpectRecord.PASSAGE_ID);
+                    .append(ExpectRecord.MEMORY_DATE)
+                    .append(" DESC");
             Cursor cExpects = database.rawQuery(buffer.toString(), null);
             if (cExpects == null)
                 return null;
