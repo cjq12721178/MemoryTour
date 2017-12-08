@@ -1,0 +1,35 @@
+<resources>
+    <!-- 字体大小 -->
+    <dimen name="size_text_title_large">37sp</dimen>
+    <dimen name="size_text_title_big">33sp</dimen>
+    <dimen name="size_text_title_middle">30sp</dimen>
+    <dimen name="size_text_title_small">27sp</dimen>
+    <dimen name="size_text_activity">24sp</dimen>
+    <dimen name="size_text_dialog">21sp</dimen>
+    <dimen name="size_text_view_label">21sp</dimen>
+    <dimen name="size_text_comments">18sp</dimen>
+
+    <!-- margin -->
+    <dimen name="margin_small_horizontal">16dp</dimen>
+    <dimen name="margin_small_vertical">15dp</dimen>
+    <dimen name="margin_mid_horizontal">33dp</dimen>
+    <dimen name="margin_mid_vertical">30dp</dimen>
+
+    <!-- padding -->
+    <dimen name="padding_micro">7dp</dimen>
+    <dimen name="padding_small">15dp</dimen>
+    <dimen name="padding_mid">30dp</dimen>
+    <dimen name="padding_small_vertical">15dp</dimen>
+    <dimen name="spinner_dropdown_vertical">30dp</dimen>
+    <dimen name="padding_dialog_base_horizontal">74dp</dimen>
+    <dimen name="padding_dialog_base_vertical">21dp</dimen>
+    <dimen name="padding_to_recite_section">42dp</dimen>
+    <dimen name="width_section_state">90dp</dimen>
+
+    <!-- 控件、图片等大小 -->
+    <dimen name="size_image_micro">36dp</dimen>
+    <dimen name="size_image_small">48dp</dimen>
+    <dimen name="size_image_middle">72dp</dimen>
+    <dimen name="size_image_large">96dp</dimen>
+    <dimen name="width_dialog_base">450dp</dimen>
+</resources>
