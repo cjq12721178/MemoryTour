@@ -1,13 +1,20 @@
 package com.cjq.tool.memorytour;
 
 import android.test.AndroidTestCase;
+import android.util.Log;
 
 import com.cjq.tool.memorytour.bean.Book;
+import com.cjq.tool.memorytour.bean.ExpectRecord;
 import com.cjq.tool.memorytour.bean.MemoryPattern;
 import com.cjq.tool.memorytour.bean.Passage;
 import com.cjq.tool.memorytour.io.sqlite.SQLiteManager;
+import com.cjq.tool.memorytour.util.Tag;
 
 import junit.framework.Assert;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by KAT on 2016/9/5.
@@ -46,4 +53,9 @@ public class DatabaseTest extends AndroidTestCase {
 //        Book book = new Book(0x00400000);
 //        Assert.assertEquals(true, SQLiteManager.containsSection(book, Book.BOOK));
 //    }
+
+    public void testSearchDailyMissions() {
+        SQLiteManager.launch(getContext());
+        Passage[] passages = SQLiteManager.searchDailyMissions(null);
+    }
 }

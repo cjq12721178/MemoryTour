@@ -90,7 +90,7 @@ public enum MemoryPattern {
             throw new IllegalStageException();
         Calendar nextDate = Calendar.getInstance();
         nextDate.add(Calendar.DAY_OF_MONTH, getCurrentTimeInterval(stage));
-        nextDate.set(Calendar.HOUR, 0);
+        nextDate.set(Calendar.HOUR_OF_DAY, 0);
         nextDate.set(Calendar.MINUTE, 0);
         nextDate.set(Calendar.SECOND, 0);
         nextDate.set(Calendar.MILLISECOND, 0);
