@@ -1,6 +1,8 @@
 package com.cjq.tool.memorytour.ui.activity;
 
+import android.Manifest;
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -9,6 +11,7 @@ import android.os.AsyncTask;
 import android.support.annotation.StringRes;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.TextView;
@@ -17,12 +20,14 @@ import com.cjq.tool.memorytour.R;
 import com.cjq.tool.memorytour.bean.Book;
 import com.cjq.tool.memorytour.bean.Chapter;
 import com.cjq.tool.memorytour.bean.Passage;
+import com.cjq.tool.memorytour.bean.UserInfo;
 import com.cjq.tool.memorytour.exception.ImportSectionException;
 import com.cjq.tool.memorytour.io.sqlite.SQLiteManager;
 import com.cjq.tool.memorytour.ui.dialog.LoadingDialog;
 import com.cjq.tool.memorytour.ui.toast.Prompter;
 import com.cjq.tool.memorytour.util.Logger;
 import com.cjq.tool.memorytour.util.Tag;
+import com.cjq.tool.memorytour.util.UriHelper;
 
 import org.xml.sax.helpers.DefaultHandler;
 
@@ -34,10 +39,16 @@ import java.util.Map;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
-public class PassageSettingActivity extends AppCompatActivity {
+import pub.devrel.easypermissions.AfterPermissionGranted;
+import pub.devrel.easypermissions.EasyPermissions;
+
+public class PassageSettingActivity extends AppCompatActivity implements View.OnClickListener {
 
     private static final int REQUEST_CODE_FILE_SELECT = 1;
+    private static final int RC_READ_EXTERNAL_STORAGE = 2;
+    private static final int RC_DATABASE_SELECT = 3;
     private static final String CONFIG_FILE_NAME = "config";
+
     private CheckBox chkBooks;
     private CheckBox chkChapters;
     private CheckBox chkPassages;
@@ -67,6 +78,8 @@ public class PassageSettingActivity extends AppCompatActivity {
                 R.string.tv_import_passages_path);
         findViewById(R.id.btn_section_save).setOnClickListener(onMoveSectionToDatabaseListener);
         findViewById(R.id.btn_add_to_recite).setOnClickListener(onAddToReciteListener);
+        findViewById(R.id.btn_export_local_database).setOnClickListener(this);
+        findViewById(R.id.btn_import_database).setOnClickListener(this);
     }
 
     private View.OnClickListener onAddToReciteListener = new View.OnClickListener() {
@@ -96,18 +109,34 @@ public class PassageSettingActivity extends AppCompatActivity {
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode == Activity.RESULT_OK &&
-                requestCode == REQUEST_CODE_FILE_SELECT) {
-            Uri uri = data.getData();
-            String filePath = uri.getPath();
-            if (chkCurrentSections != null &&
-                    !chkCurrentSections.getText().toString().equals(filePath)) {
-                chkCurrentSections.setText(filePath);
-                getSharedPreferences(CONFIG_FILE_NAME, Context.MODE_PRIVATE)
-                        .edit()
-                        .putString(chkCurrentSections.getTag().toString(), filePath)
-                        .commit();
-                chkCurrentSections = null;
+        if (resultCode == Activity.RESULT_OK) {
+            switch (requestCode) {
+                case REQUEST_CODE_FILE_SELECT: {
+                    Uri uri = data.getData();
+                    String filePath = uri.getPath();
+                    if (chkCurrentSections != null &&
+                            !chkCurrentSections.getText().toString().equals(filePath)) {
+                        chkCurrentSections.setText(filePath);
+                        getSharedPreferences(CONFIG_FILE_NAME, Context.MODE_PRIVATE)
+                                .edit()
+                                .putString(chkCurrentSections.getTag().toString(), filePath)
+                                .commit();
+                        chkCurrentSections = null;
+                    }
+                } break;
+                case RC_DATABASE_SELECT: {
+                    String filePath = UriHelper.getRealFilePath(this, data.getData());
+                    if (TextUtils.isEmpty(filePath)) {
+                        Prompter.show(R.string.ppt_import_database_empty);
+                    } else {
+                        if (SQLiteManager.replaceLocalDatabase(this, filePath)) {
+                            setResult(RESULT_OK);
+                            Prompter.show(R.string.ppt_import_database_success);
+                        } else {
+                            Prompter.show(R.string.ppt_import_database_failed);
+                        }
+                    }
+                } break;
             }
         }
         super.onActivityResult(requestCode, resultCode, data);
@@ -147,6 +176,42 @@ public class PassageSettingActivity extends AppCompatActivity {
         chkSection.setTag(configKey);
         chkSection.setOnLongClickListener(onFilePathChangeListener);
         return chkSection;
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.btn_export_local_database:
+                if (SQLiteManager.exportLocalDatabase(this)) {
+                    Prompter.show(R.string.ppt_export_database_success);
+                } else {
+                    Prompter.show(R.string.ppt_export_database_failed);
+                }
+                break;
+            case R.id.btn_import_database:
+                chooseDatabase();
+                break;
+        }
+    }
+
+    @AfterPermissionGranted(RC_READ_EXTERNAL_STORAGE)
+    private void chooseDatabase() {
+        if (EasyPermissions.hasPermissions(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+            intent.setDataAndType(UriHelper.getUriByPath(this, ""), "text/plain");
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            try {
+                startActivityForResult(Intent.createChooser(intent, getString(R.string.ppt_choose_import_database)), RC_DATABASE_SELECT);
+            } catch (ActivityNotFoundException e) {
+                Prompter.show(R.string.ppt_file_manager_not_installed);
+            }
+        } else {
+            EasyPermissions.requestPermissions(this,
+                    getString(R.string.ppt_request_read_external_storage_permission),
+                    RC_READ_EXTERNAL_STORAGE,
+                    Manifest.permission.READ_EXTERNAL_STORAGE);
+        }
     }
 
     private class InsertSectionTask extends AsyncTask<String, Integer, Boolean> {

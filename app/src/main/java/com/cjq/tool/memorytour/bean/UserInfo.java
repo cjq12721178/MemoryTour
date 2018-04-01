@@ -2,10 +2,13 @@ package com.cjq.tool.memorytour.bean;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.support.v4.util.TimeUtils;
 import android.text.TextUtils;
 
 import com.cjq.tool.memorytour.util.Comparer;
 import com.cjq.tool.memorytour.util.Logger;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by KAT on 2017/2/3.
@@ -92,6 +95,15 @@ public class UserInfo {
         userInfo.totalReviewingCount = provider.getTotalReviewingPassageCount();
         userInfo.totalNotReciteCount = provider.getTotalNotRecitePassageCount();
         userInfo.totalRecitedCount = provider.getTotalRecitedPassageCount();
+    }
+
+    public static void reInitialize(Provider provider) {
+        if (userInfo == null || provider == null) {
+            return;
+        }
+        getEditor().putLong(LAST_LOG_IN_TIME, System.currentTimeMillis() - TimeUnit.DAYS.toMillis(1))
+                .commit();
+        initialize(provider);
     }
 
     private UserInfo() {

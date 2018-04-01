@@ -17,6 +17,7 @@ import com.cjq.tool.qbox.ui.dialog.BaseDialog;
 public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_CODE_REVIEW_STUDY = 1;
+    private static final int RC_SETTINGS = 2;
     private long exitTime;
     private TextView tvRecitingBook;
     private TextView tvIntradayReciting;
@@ -125,6 +126,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_CODE_REVIEW_STUDY) {
             updateMemoryInformation();
+        } else if (requestCode == RC_SETTINGS && resultCode == RESULT_OK) {
+            updateMemoryInformation();
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
@@ -161,8 +164,9 @@ public class MainActivity extends AppCompatActivity {
                     //TODO: library
                 } break;
                 case R.id.tv_setting: {
-                    startActivity(new Intent(MainActivity.this,
-                            PassageSettingActivity.class));
+                    startActivityForResult(new Intent(MainActivity.this,
+                            PassageSettingActivity.class),
+                            RC_SETTINGS);
 //                    startActivity(new Intent(MainActivity.this,
 //                            PeachGardenActivity.class));
                 } break;

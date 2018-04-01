@@ -31,4 +31,20 @@
         android:text="@string/btn_add_to_recite"
         android:background="@drawable/ic_bg_button_single"
         android:layout_marginTop="@dimen/margin_small_vertical"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/btn_export_local_database"
+        android:text="@string/btn_export_local_database"
+        android:background="@drawable/ic_bg_button_single"
+        android:layout_marginTop="@dimen/margin_small_vertical"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/btn_import_database"
+        android:text="@string/btn_import_database"
+        android:background="@drawable/ic_bg_button_single"
+        android:layout_marginTop="@dimen/margin_small_vertical"/>
 </LinearLayout>

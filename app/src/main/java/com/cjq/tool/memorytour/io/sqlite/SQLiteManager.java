@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Environment;
 import android.support.annotation.Nullable;
 
 import com.cjq.tool.memorytour.bean.BasePassage;
@@ -20,8 +21,10 @@ import com.cjq.tool.memorytour.bean.RecitableBook;
 import com.cjq.tool.memorytour.bean.RecitableChapter;
 import com.cjq.tool.memorytour.bean.RecitablePassage;
 import com.cjq.tool.memorytour.bean.UserInfo;
+import com.cjq.tool.memorytour.util.FileUtil;
 import com.cjq.tool.memorytour.util.Logger;
 
+import java.io.File;
 import java.util.List;
 
 /**
@@ -442,6 +445,22 @@ public class SQLiteManager {
             Logger.record(e);
         }
         return null;
+    }
+
+    public static boolean exportLocalDatabase(Context context) {
+        return FileUtil.copyOnlyFile(context.getDatabasePath(DATABASE_NAME).getPath(), Environment.getExternalStorageDirectory() + File.separator + "memory tour" + File.separator + DATABASE_NAME);
+    }
+
+    public static boolean replaceLocalDatabase(Context context, String newDatabasePath) {
+        shutdown();
+        if (!FileUtil.copyOnlyFile(newDatabasePath, context.getDatabasePath(DATABASE_NAME).getPath())) {
+            return false;
+        }
+        if (!launch(context)) {
+            return false;
+        }
+        UserInfo.reInitialize(buildUserInfoProvider());
+        return true;
     }
 
     public static UserInfoProvider buildUserInfoProvider() {

@@ -15,8 +15,8 @@ android {
         applicationId 'com.cjq.tool'
         minSdkVersion 17
         targetSdkVersion 27
-        versionCode 23
-        versionName "1.0.3"
+        versionCode 24
+        versionName "1.0.4"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -41,6 +41,10 @@ android {
     }
     productFlavors {
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 }
 
 repositories {
@@ -57,4 +61,5 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:27.0.2'
     compile(name: 'com.cjq.tool.qbox-0.1.5', ext: 'aar')
+    implementation 'pub.devrel:easypermissions:1.2.0'
 }

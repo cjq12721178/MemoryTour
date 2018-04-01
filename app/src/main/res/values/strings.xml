@@ -38,6 +38,8 @@
     <string name="el_import_title">请选择导入文件</string>
     <string name="btn_insert_section">保存至本地数据库</string>
     <string name="btn_add_to_recite">修改待记忆章节库</string>
+    <string name="btn_export_local_database">提取本地数据库</string>
+    <string name="btn_import_database">导入数据库（慎用）</string>
     <!-- Passage视图界面 -->
     <string name="rdo_main_body">正文</string>
     <string name="rdo_comments">注释</string>
@@ -85,6 +87,13 @@
     <string name="ppt_file_manager_not_installed">请安装文件管理器</string>
     <string name="ppt_enable_import_section">请点击允许导入书/篇/章</string>
     <string name="ppt_saving_section">正在保存...</string>
+    <string name="ppt_export_database_success">提取本地数据库成功</string>
+    <string name="ppt_export_database_failed">提取本地数据库失败</string>
+    <string name="ppt_request_read_external_storage_permission">导入数据库需要读取权限</string>
+    <string name="ppt_choose_import_database">请选择需要导入的数据库</string>
+    <string name="ppt_import_database_empty">导入数据库不得为空</string>
+    <string name="ppt_import_database_success">导入数据库成功</string>
+    <string name="ppt_import_database_failed">导入数据库失败</string>
     <!-- Passage视图界面 -->
     <string name="ppt_content_null_main_body">当前章节无正文</string>
     <string name="ppt_content_null_comments">当前章节无注释</string>
