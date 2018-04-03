@@ -8,6 +8,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Environment;
+import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -31,6 +33,7 @@ import com.cjq.tool.memorytour.util.UriHelper;
 
 import org.xml.sax.helpers.DefaultHandler;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.List;
@@ -198,7 +201,7 @@ public class PassageSettingActivity extends AppCompatActivity implements View.On
     private void chooseDatabase() {
         if (EasyPermissions.hasPermissions(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
             Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-            intent.setDataAndType(UriHelper.getUriByPath(this, ""), "text/plain");
+            intent.setDataAndType(UriHelper.getUriByPath(this, Environment.getExternalStorageDirectory() + File.separator + "Download" + File.separator + "MemoryStorage.db"), "*/*");
             intent.addCategory(Intent.CATEGORY_OPENABLE);
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             try {
@@ -212,6 +215,13 @@ public class PassageSettingActivity extends AppCompatActivity implements View.On
                     RC_READ_EXTERNAL_STORAGE,
                     Manifest.permission.READ_EXTERNAL_STORAGE);
         }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
     }
 
     private class InsertSectionTask extends AsyncTask<String, Integer, Boolean> {

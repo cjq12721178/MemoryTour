@@ -52,12 +52,16 @@ public class UriHelper {
     }
 
     public static Uri getUriByPath(Context context, final String filePath) {
+        return getUriByPath(context, new File(filePath));
+    }
+
+    public static Uri getUriByPath(Context context, File file) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             return FileProvider.getUriForFile(context,
-                    BuildConfig.APPLICATION_ID + ".fileprovider",
-                    new File(filePath));
+                    BuildConfig.APPLICATION_ID + ".provider",
+                    file);
         }
-        return Uri.fromFile(new File(filePath));
+        return Uri.fromFile(file);
     }
 
     /**
